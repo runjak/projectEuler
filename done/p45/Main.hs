@@ -1,18 +1,25 @@
 module Main where
 
-import Data.List.Ordered (mergeAll)
+import Control.Arrow as Arrow
+import Data.List     as List
 
-triangles = [n*(n+1)`div`2|n<-[1..]]
-pentagonals = [n*(3*n-1)`div`2|n<-[1..]]
-hexagonals = [n*(2*n-1)|n<-[1..]]
+type N      = Int
+type Stream = ([N],[N])
+type Point  = (N,N)
 
-bag = mergeAll [triangles, pentagonals, hexagonals]
+-- Definition of number functions:
+triangle,pentagonal,hexagonal :: N -> N
+triangle   n = n*(n+1)   `div` 2
+pentagonal n = n*(3*n-1) `div` 2
+hexagonal  n = n*(2*n-1) -- Evry hexagonal number is also a triangle number.
 
-search :: [Integer] -> Integer
-search (x:y:z:rest)
-	| x == y && y == z = y
-	| otherwise = search (y:z:rest)
+-- n = (sqrt(24x+1)+1)/6
+isPentagonal :: N -> Bool
+isPentagonal n = let m = 24*n+1
+                     o = sqrt $ fromIntegral m :: Double
+                     p = (o+1)/6
+                 in ceiling p == floor p
 
-solution = search $ dropWhile (<=40755) bag
+solution = last . take 3 . filter isPentagonal $ map hexagonal [1..]
 
 main = print solution
