@@ -24,14 +24,16 @@ isPrime n
                 in n == search primes
 
 solution :: N
-solution = go (0 :% 0, 0 :% 0) $ zip sizes $ spiral 1 2
+solution = go (0 :% 0) $ zip sizes $ spiral 1 2
   where
-    go :: (R, R) -> [(N, (N,N,N,N))] -> N
-    go (x, y) ((size, (a,b,c,d)):xs) = let pCount = toInteger . length . filter isPrime
-                                           x'     = (pCount [a,c] + Real.numerator x) % (Real.denominator x + 2)
-                                           y'     = (pCount [b,d] + Real.numerator y) % (Real.denominator y + 2)
-                                           break  = x' < threshold && y' < threshold
-                                       in if break then size else go (x', y') xs
+    go :: R -> [(N, (N,N,N,N))] -> N
+    go z ((size, (a,b,c,d)):xs) = let pCount = toInteger . length . filter isPrime
+                                      z'     = (pCount [a,b,c,d] + Real.numerator z) % (Real.denominator z + 2)
+    --                                x'     = (pCount [a,c] + Real.numerator x) % (Real.denominator x + 2)
+    --                                y'     = (pCount [b,d] + Real.numerator y) % (Real.denominator y + 2)
+    --                                break  = x' < threshold && y' < threshold
+                                      break  = z' < threshold
+                                  in if break then size else go z' xs
 
     threshold = 1 % 10 :: R
     sizes = [3,5..] :: [N]
