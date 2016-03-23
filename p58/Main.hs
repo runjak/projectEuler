@@ -3,39 +3,70 @@ module Main where
 import GHC.Real ((%),Ratio ((:%)))
 import qualified GHC.Real as Real
 
+import Data.Set (Set)
+import qualified Data.Set as Set
+
 type N = Integer
 type R = Rational
 
-spiral :: N -> N -> [(N,N,N,N)]
-spiral start step = let [a,b,c,d] = take 4 . drop 1 $ iterate (+step) start
-                    in (a,b,c,d):spiral d (step+2)
-
 primes :: [N]
-primes = 2: 3: sieve [] (tail primes) 3
-	where
-	notDivsBy d n     = n `rem` d /= 0
-	sieve ds (p:ps) x = foldr (filter . notDivsBy) [x+2,x+4..p*p-2] ds
-		                ++ sieve (p:ds) ps (p*p)
+primes = 2 : 3 : sieve [] (tail primes) 3
+  where
+  notDivsBy d n     = n `rem` d /= 0
+  sieve ds (p:ps) x = foldr (filter . notDivsBy) [x+2, x+4..p*p-2] ds
+                   ++ sieve (p:ds) ps (p*p)
+
+root :: N -> N
+root = round . sqrt . fromIntegral
 
 isPrime :: N -> Bool
-isPrime n
-  | n <= 1    = False
-  | otherwise = let search = last . takeWhile (<= n) 
-                in n == search primes
+isPrime x
+  | x <= 1 = False
+  | otherwise = all (/=0) . map (mod x) $ takeWhile (<=(root x)) primes
 
-solution :: N
-solution = go (0 :% 0) $ zip sizes $ spiral 1 2
+-- | 1,9,25,…
+squares :: [N]
+squares = [x*x|x<-[1,3..]]
+
+-- | 8,16,24,…
+sqDists :: [N]
+sqDists = zipWith subtract squares $ tail squares
+
+-- | 1,3,5,7,9,13,17,21,25,31,37,43,49,…
+points :: [N]
+points = points' (head squares) sqDists
   where
-    go :: R -> [(N, (N,N,N,N))] -> N
-    go z ((size, (a,b,c,d)):xs) = let pCount = toInteger . length . filter isPrime
-                                      z'     = (pCount [a,b,c,d] + Real.numerator z) % (Real.denominator z + 2)
-    --                                x'     = (pCount [a,c] + Real.numerator x) % (Real.denominator x + 2)
-    --                                y'     = (pCount [b,d] + Real.numerator y) % (Real.denominator y + 2)
-    --                                break  = x' < threshold && y' < threshold
-                                      break  = z' < threshold
-                                  in if break then size else go z' xs
+    points' :: N -> [N] -> [N]
+    points' start (dist:dists) =
+      let q  = dist `div` 4
+          ps = take 3 $ tail $ iterate (+q) start
+          pps = points' (start+dist) dists
+      in [start]++ps++pps
 
-    threshold = 1 % 10 :: R
-    sizes = [3,5..] :: [N]
+primeRatios :: [(N,R)]
+primeRatios = go 0 0 points
+  where
+    go :: N -> N -> [N] -> [(N,R)]
+    go nPrimes nTotal (n:ns)
+      | isPrime n =
+          let nPrimes' = nPrimes + 1
+              nTotal'  = nTotal + 1
+          in (n, nPrimes' % nTotal') : go nPrimes' nTotal' ns
+      | otherwise =
+          let nTotal' = nTotal + 1
+          in (n, nPrimes % nTotal') : go nPrimes nTotal' ns
+
+predicate :: (N,R) -> Bool
+predicate = (< 1%10) . snd
+
+wantedCorners :: [(N,R)]
+wantedCorners = go $ tail primeRatios
+  where
+    go :: [(N,R)] -> [(N,R)]
+    go ns = let (corners,ns') = splitAt 4 ns
+                good = all predicate corners
+            in if good then corners else go ns'
+
+solution = root . fst . last $ wantedCorners
 
 main = print solution
