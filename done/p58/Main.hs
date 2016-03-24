@@ -64,7 +64,7 @@ wantedCorners = go $ tail primeRatios
   where
     go :: [(N,R)] -> [(N,R)]
     go ns = let (corners,ns') = splitAt 4 ns
-                good = all predicate corners
+                good = any predicate corners
             in if good then corners else go ns'
 
 solution = root . fst . last $ wantedCorners
