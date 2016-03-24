@@ -1,7 +1,7 @@
 module Main where
 
 import Control.Monad (liftM)
-import Array
+import Data.Array
 
 type Point = (Int,Int)
 
@@ -40,6 +40,6 @@ groups = rows++cols++diags1++diags2
 
 main :: IO ()
 main = do
-	f <- field
-	let m = maximum $ map (multiValue f) groups
-	putStrLn $ show m
+  f <- field
+  let m = maximum $ map (multiValue f) groups
+  putStrLn $ show m
