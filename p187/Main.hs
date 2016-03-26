@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Monad
 import Data.Set (Set)
 import qualified Data.Set as Set
 
@@ -8,7 +9,7 @@ type N = Int
 magic :: N
 magic = 10^8
 
-range :: [N]
+range :: [N] -- FIXME check where this is useful
 range = [4..magic] -- | 4 is the first semiprime
 
 primes :: [N]
@@ -26,13 +27,19 @@ isPrime x
   | x <= 1 = False
   | otherwise = all (/=0) . map (mod x) $ takeWhile (<=(root x)) primes
 
-subSet :: Set N -> N -> Set N
-subSet s p = fst $ Set.split (magic `div` p) s
+{-|
+  Problems with solution encompass:
+  1. It takes too long
+  -> But I can make lists into sets and use faster projections for sets!
+|-}
+solution :: N
+solution = length $ do
+  let ps = takeWhile (<= (magic `div` 2)) primes
+  p1 <- ps
+  p2 <- takeWhile (<= (magic `div` p1)) $ dropWhile (< p1) ps
+  let n = p1*p2
+  guard $ n < magic
+  return n
 
-foo = let startSet = Set.fromAscList $ takeWhile (<= (magic `div` 2)) primes
-          ps = takeWhile (<= (root magic) primes
-      in go ps startSet
-      where
-        go :: [N] -> Set N -> [Set N]
-        go (p:ps) s = s : go ps $ subS
-        go [] s = [s]
+main :: IO ()
+main = print solution
