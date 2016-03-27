@@ -9,9 +9,6 @@ type N = Int
 magic :: N
 magic = 10^8
 
-range :: [N] -- FIXME check where this is useful
-range = [4..magic] -- | 4 is the first semiprime
-
 primes :: [N]
 primes = 2 : 3 : sieve [] (tail primes) 3
   where
@@ -27,19 +24,18 @@ isPrime x
   | x <= 1 = False
   | otherwise = all (/=0) . map (mod x) $ takeWhile (<=(root x)) primes
 
-{-|
-  Problems with solution encompass:
-  1. It takes too long
-  -> But I can make lists into sets and use faster projections for sets!
-|-}
+startSet :: Set N
+startSet = Set.fromAscList $ takeWhile (<= (magic `div` 2)) primes
+
+project :: N -> Set N -> Set N
+project p = let upperBound = fst . Set.split ((magic `div` p) + 1)
+                lowerBound = snd . Set.split (subtract 1 p)
+            in lowerBound . upperBound
+
 solution :: N
-solution = length $ do
-  let ps = takeWhile (<= (magic `div` 2)) primes
-  p1 <- ps
-  p2 <- takeWhile (<= (magic `div` p1)) $ dropWhile (< p1) ps
-  let n = p1*p2
-  guard $ n < magic
-  return n
+solution = sum $ do
+  p1 <- Set.toAscList $ startSet
+  return $ Set.size $ project p1 startSet
 
 main :: IO ()
 main = print solution
