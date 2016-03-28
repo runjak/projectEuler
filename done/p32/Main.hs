@@ -61,6 +61,6 @@ factors = do
   -- Returning the pairs:
   return (x, y)
 
-solution = sum $ map (uncurry (*)) factors
+solution = sum $ List.nub $ map (uncurry (*)) factors
 
 main = print solution
