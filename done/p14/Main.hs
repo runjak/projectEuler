@@ -9,8 +9,8 @@ range = [1..border]
 
 collatz :: (Integral a) => a -> a
 collatz n
-	| odd n = 3*n+1
-	| otherwise = n`div`2
+  | odd n = 3*n+1
+  | otherwise = n`div`2
 
 chain :: Int -> [Int]
 chain 1 = [1]
@@ -20,4 +20,4 @@ score = length . chain
 
 vals = [(score x, x)|x<-range]
 
-main = putStrLn . show $ maximumBy (\x y -> compare (fst x) (fst y))  vals
+main = print $ maximumBy (\x y -> compare (fst x) (fst y)) vals
