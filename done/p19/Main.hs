@@ -9,23 +9,23 @@ years = [1901..2000]
 
 isLeap :: Year -> Bool
 isLeap year = do
-	if year `mod` 4 == 0
-		then if year `mod` 100 == 0
-			then if year `mod` 400 == 0
-				then True
-				else False
-			else True
-		else False
+  if year `mod` 4 == 0
+    then if year `mod` 100 == 0
+      then if year `mod` 400 == 0
+        then True
+        else False
+      else True
+    else False
 
 data Month = January | February | March | April | May | June | July | August | September | October | November | December
-	deriving(Eq, Enum, Show)
+  deriving(Eq, Enum, Show)
 months = [January ..]
 
 daysInMonth :: Year -> Month -> Int
 daysInMonth year month
-	| month == February = if isLeap year then 29 else 28
-	| month `elem` [January, March, May, July, August, October, December] = 31
-	| otherwise = 30
+  | month == February = if isLeap year then 29 else 28
+  | month `elem` [January, March, May, July, August, October, December] = 31
+  | otherwise = 30
 
 data Day = Fill | Sunday deriving (Eq, Show)
 days = cycle $ replicate 6 Fill ++ [Sunday]
@@ -36,7 +36,7 @@ allMonths = concat . zipWith (\y ms -> map (daysInMonth y) ms) years $ repeat mo
 
 go :: ([Day],Int) -> Int -> ([Day],Int)
 go (d, score) month
-	| head d == Sunday = (drop month d, score + 1)
-	| otherwise = (drop month d, score)
+  | head d == Sunday = (drop month d, score + 1)
+  | otherwise = (drop month d, score)
 
 main = print . snd $ foldl go (daysAfter1900, 0) allMonths
