@@ -8,7 +8,7 @@ digits :: String
 digits = "123456789"
 
 searchSpace :: [N]
-searchSpace = [1..999]
+searchSpace = [1..9999]
 
 pandigital :: N -> Bool
 pandigital = (== digits) . sort . show
