@@ -10,10 +10,10 @@ startMap = M.empty
 
 addChar :: CMap -> Char -> CMap
 addChar map c = M.alter inc c map
-	where
-		inc :: Maybe Int -> Maybe Int
-		inc Nothing = Just 1
-		inc (Just x) = Just (x + 1)
+  where
+    inc :: Maybe Int -> Maybe Int
+    inc Nothing = Just 1
+    inc (Just x) = Just (x + 1)
 
 scanText :: String -> CMap
 scanText = foldl addChar startMap

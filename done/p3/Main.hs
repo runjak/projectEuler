@@ -12,8 +12,8 @@ findSmallFactor :: Integer -> [Integer] -> Integer
 findSmallFactor x [] = 0
 findSmallFactor 0 (x:xs) = 0
 findSmallFactor x (y:ys) = if (mod x y) == 0
-	then y
-	else findSmallFactor x ys
+  then y
+  else findSmallFactor x ys
 
 -- Here we jump a little more :P
 getBigFactor :: Integer -> Integer -> Integer
@@ -28,8 +28,8 @@ primeFactors :: Integer -> [Integer]
 primeFactors 0 = []
 primeFactors 1 = []
 primeFactors x = (if (findSmallFactor x primes) /= 1
-	then [(findSmallFactor x primes)]
-	else []) ++ primeFactors (getBigFactor x (findSmallFactor x primes))
+  then [(findSmallFactor x primes)]
+  else []) ++ primeFactors (getBigFactor x (findSmallFactor x primes))
 
 findBiggest :: [Integer] -> Integer
 findBiggest [] = 0

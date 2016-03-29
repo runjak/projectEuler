@@ -16,8 +16,8 @@ toBinStr :: Int -> String
 toBinStr 0 = "0"
 toBinStr 1 = "1"
 toBinStr x
-	| odd x = '1' : toBinStr ((x-1)`div`2)
-	| otherwise = '0' : toBinStr (x`div`2)
+  | odd x = '1' : toBinStr ((x-1)`div`2)
+  | otherwise = '0' : toBinStr (x`div`2)
 
 pals :: [Int]
 pals = filter (palindrom . toBinStr) bTenPals

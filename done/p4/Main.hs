@@ -5,8 +5,8 @@ isPalindrome :: String -> Bool
 isPalindrome [] = True
 isPalindrome (x:[]) = True
 isPalindrome x = if (head x)==(last x)
-	then isPalindrome (tail (init x))
-	else False
+  then isPalindrome (tail (init x))
+  else False
 
 -- Creates possibly wanted palindromes
 palindromeCreation :: [Integer]->[Integer]
@@ -30,8 +30,8 @@ getBigFactor x y = toInteger (floor (fromRational (toRational(x) / toRational(y)
 hasValidFactors :: Integer -> [Integer] -> Bool
 hasValidFactors p[] = False
 hasValidFactors p(x:xs) = (if (validFactor (getBigFactor p x))
-	then True
-	else hasValidFactors p xs)--Could perhaps've been a little smarter.. perhaps
+  then True
+  else hasValidFactors p xs)--Could perhaps've been a little smarter.. perhaps
 
 -- Filter possible Factors
 getFactors :: Integer -> [Integer] -> [Integer]
@@ -41,8 +41,8 @@ getFactors p (x:xs) = [x|x<-xs, (mod p x) == 0]
 wantedP :: [Integer] -> Integer
 wantedP [] = 0
 wantedP (p:ps) = if (hasValidFactors p(getFactors p [100..999]))
-	then p
-	else wantedP ps
+  then p
+  else wantedP ps
 
 problem4 :: Integer
 problem4 = wantedP palindromeList

@@ -15,8 +15,8 @@ evenFibonacci (n+1) = (evenFibonacci n) * 4 + evenFibonacci (n-1)
 -- little helpy filter :P
 evenList :: Integer -> [Integer]
 evenList x = if (evenFibonacci x) <= 4000000
-	then (evenFibonacci x : (evenList (x+1)))
-	else []
+  then (evenFibonacci x : (evenList (x+1)))
+  else []
 
 problem2 :: () -> Integer
 problem2 () = sum (evenList 0)

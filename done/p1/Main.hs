@@ -17,7 +17,7 @@ counterCheck :: [(Integer,Integer)] -> (Bool,[(Integer,Integer)])
 counterCheck [] = (False,[])
 counterCheck ((a,b):[]) = ((a >= b),(if a >= b then [(0,b)] else [(a,b)]))
 counterCheck ((a,b):xs) = (or [fst (counterCheck xs),(a >= b)],
-	(if a >= b then (0,b) else (a,b)):(snd (counterCheck xs)))
+  (if a >= b then (0,b) else (a,b)):(snd (counterCheck xs)))
 
 -- Builds up a new List of Items with only those contained
 -- where fst (counterCheck [(Integer,Integer)]) is True.

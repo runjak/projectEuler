@@ -40,15 +40,15 @@ getPrimeFactor x (y:ys) = if and[(mod x y) == 0, x /= y] then y else getPrimeFac
 getFactorList :: [Integer] -> [Integer]
 getFactorList [] = []
 getFactorList (x:xs) = if (getPrimeFactor x primesInRange) == 0 --We have a prime here, sire :P
-	then x : getFactorList xs
-	else (getPrimeFactor x primesInRange) : getFactorList(
-		(listDivision (getPrimeFactor x primesInRange)[x])
-		++ (
-			notPrimes
-				(listDivision (getPrimeFactor x primesInRange) xs)
-				[getPrimeFactor x primesInRange]
-		)
-	)
+  then x : getFactorList xs
+  else (getPrimeFactor x primesInRange) : getFactorList(
+    (listDivision (getPrimeFactor x primesInRange)[x])
+    ++ (
+      notPrimes
+        (listDivision (getPrimeFactor x primesInRange) xs)
+        [getPrimeFactor x primesInRange]
+    )
+  )
 
 problem5 :: [Integer]
 problem5 = getFactorList notPrimesInRange ++ notPrimes primesInRange (getFactorList notPrimesInRange)

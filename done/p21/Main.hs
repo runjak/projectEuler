@@ -11,9 +11,9 @@ intSqr = floor . sqrt . fromIntegral
 
 divisors :: Int -> [Int]
 divisors x = (1:) . nub . concat $ do
-	a <- [2..intSqr x]
-	guard (x`rem`a == 0)
-	return [a, x`div`a]
+  a <- [2..intSqr x]
+  guard (x`rem`a == 0)
+  return [a, x`div`a]
 
 divSum :: Int -> Int
 divSum = sum . divisors

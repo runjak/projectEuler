@@ -2,9 +2,9 @@ module Main where
 
 wordList :: IO [String]
 wordList = do
-	input <- readFile "words.txt"
-	let str = '[':input++"]"
-	return $ (read str :: [String])
+  input <- readFile "words.txt"
+  let str = '[':input++"]"
+  return $ (read str :: [String])
 
 charScore :: Char -> Int
 charScore = subtract 64 . fromEnum
@@ -26,7 +26,7 @@ triangleWords = length . triangleScores . scores
 
 main :: IO ()
 main = do
-	wl <- wordList
-	let foo = triangleWords wl
-	putStrLn $ show foo
-	return ()
+  wl <- wordList
+  let foo = triangleWords wl
+  putStrLn $ show foo
+  return ()

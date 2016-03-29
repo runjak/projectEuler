@@ -4,17 +4,17 @@ import Control.Monad (guard)
 
 triangles :: [Integer]
 triangles = helper 0 [1..]
-	where
-	helper n (x:xs) =
-		let n' = n+x
-		in n' : helper n' xs
+  where
+  helper n (x:xs) =
+    let n' = n+x
+    in n' : helper n' xs
 
 someDivisors :: Integer -> [Integer]
 someDivisors num = do
-	let limit = floor . sqrt $ fromIntegral num
-	x <- [2..limit]
-	guard (num `mod` x == 0)
-	return x
+  let limit = floor . sqrt $ fromIntegral num
+  x <- [2..limit]
+  guard (num `mod` x == 0)
+  return x
 
 getDivisorCount :: Integer -> Int
 getDivisorCount num = 2 * (length $ someDivisors num) + 2

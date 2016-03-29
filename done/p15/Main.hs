@@ -22,7 +22,7 @@ expandList' (a:as) = a : expandList as
 expandList' [] = []
 
 solution =
-	let expansion = foldl (flip id) startList $ genericReplicate gridSize expandList
-	in head . foldl (flip id) expansion $ genericReplicate gridSize deduceList
+  let expansion = foldl (flip id) startList $ genericReplicate gridSize expandList
+  in head . foldl (flip id) expansion $ genericReplicate gridSize deduceList
 
 main = print solution

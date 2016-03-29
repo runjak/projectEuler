@@ -13,30 +13,30 @@ charList = " etaoinshrdlucmwfygpbvkjzxq"
 
 xorChar :: Char -> Char -> Char
 xorChar a b =
-	let
-		a' = fromEnum a
-		b' = fromEnum b
-	in toEnum $ xor a' b'
+  let
+    a' = fromEnum a
+    b' = fromEnum b
+  in toEnum $ xor a' b'
 
 type CMap = M.Map Char Int
 getAlphabet :: String -> Alphabet
 getAlphabet = mkAlphabet . mkCMap
-	where
-	mkCMap :: String -> CMap
-	mkCMap = foldl incChar startMap
+  where
+  mkCMap :: String -> CMap
+  mkCMap = foldl incChar startMap
 
-	mkAlphabet :: CMap -> Alphabet
-	mkAlphabet = reverse . map fst . sortBy (\x y -> compare (snd x) (snd y)) . M.assocs
+  mkAlphabet :: CMap -> Alphabet
+  mkAlphabet = reverse . map fst . sortBy (\x y -> compare (snd x) (snd y)) . M.assocs
 
-	startMap :: CMap
-	startMap = M.empty
-	
-	incChar :: CMap -> Char -> CMap
-	incChar = flip (M.alter inc)
-		where
-			inc :: Maybe Int -> Maybe Int
-			inc Nothing = Just 1
-			inc (Just x) = Just (x + 1)
+  startMap :: CMap
+  startMap = M.empty
+  
+  incChar :: CMap -> Char -> CMap
+  incChar = flip (M.alter inc)
+    where
+      inc :: Maybe Int -> Maybe Int
+      inc Nothing = Just 1
+      inc (Just x) = Just (x + 1)
 
 type Alphabet = String
 type Alphabets = [Alphabet]
@@ -46,14 +46,14 @@ alphabets = map getAlphabet . transpose
 type Password = String
 crack :: Alphabets -> Password
 crack = map (fst . maximumBy (\x y -> compare (snd x) (snd y)) . helper)
-	where
-		helper :: Alphabet -> [(Char, Int)]
-		helper a = do
-			c <- charList
-			let f = xorChar c
-			let a' = map f a
-			let a'' = filter isLower a'
-			return (c, length a'')
+  where
+    helper :: Alphabet -> [(Char, Int)]
+    helper a = do
+      c <- charList
+      let f = xorChar c
+      let a' = map f a
+      let a'' = filter isLower a'
+      return (c, length a'')
 
 type Cipher = String
 decipher :: Cipher -> Password -> String
@@ -67,16 +67,16 @@ asciiSum = sum . map fromEnum
 {- Initial functions -}
 load :: String -> [Int]
 load input =
-	let
-		s = init $ init input
-		s' = '[':s++"]"
-	in
-		read s'
+  let
+    s = init $ init input
+    s' = '[':s++"]"
+  in
+    read s'
 
 stack :: [a] -> [[a]]
 stack x
-	| length x >= 3 = (take 3 x ) : stack (drop 3 x)
-	| otherwise = [x]
+  | length x >= 3 = (take 3 x ) : stack (drop 3 x)
+  | otherwise = [x]
 
 {- All that is below shall run inside the IO Monad -}
 file :: IO String
@@ -90,11 +90,11 @@ loadStack = liftM (stack . map toEnum) loadFile
 
 main :: IO ()
 main = do
-	stack <- loadStack
-	let password = crack $ alphabets stack
-	let cipher = concat stack
-	let clearText = decipher cipher password
-	let sum = asciiSum $ filter isAscii clearText
-	print $ "Password:\t" ++ password
-	print $ "Cleartext:\n" ++ clearText
-	print $ "Sum:\t" ++ (show sum)
+  stack <- loadStack
+  let password = crack $ alphabets stack
+  let cipher = concat stack
+  let clearText = decipher cipher password
+  let sum = asciiSum $ filter isAscii clearText
+  print $ "Password:\t" ++ password
+  print $ "Cleartext:\n" ++ clearText
+  print $ "Sum:\t" ++ (show sum)

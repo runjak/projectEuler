@@ -8,9 +8,9 @@ file = readFile "names.txt"
 
 mkLines :: String -> String
 mkLines (x:xs)
-	| x == '\"' = mkLines xs
-	| x == ',' = '\n':mkLines xs
-	| otherwise = x : mkLines xs
+  | x == '\"' = mkLines xs
+  | x == ',' = '\n':mkLines xs
+  | otherwise = x : mkLines xs
 mkLines [] = []
 
 sortedLines :: String -> [String]
