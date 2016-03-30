@@ -22,5 +22,5 @@ alphaScore = sum . map (flip (-) 64 . toInteger . fromEnum)
 scores :: String -> [Integer]
 scores = zipWith (*) [1..] . map alphaScore . sortedLines
 
-Main :: IO ()
-Main = print $ liftM (sum . scores) file
+main :: IO ()
+main = print =<< liftM (sum . scores) file
