@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Function (on)
 import Data.List (maximumBy)
 
 border :: Int
@@ -20,4 +21,4 @@ score = length . chain
 
 vals = [(score x, x)|x<-range]
 
-main = print $ maximumBy (\x y -> compare (fst x) (fst y)) vals
+main = print $ maximumBy (compare `on` fst) vals

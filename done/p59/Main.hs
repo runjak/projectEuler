@@ -1,5 +1,6 @@
 module Main where
 
+import Data.Function (on)
 import System.IO
 import Data.Bits (xor)
 import Data.List (sortBy, transpose, maximumBy)
@@ -26,7 +27,7 @@ getAlphabet = mkAlphabet . mkCMap
   mkCMap = foldl incChar startMap
 
   mkAlphabet :: CMap -> Alphabet
-  mkAlphabet = reverse . map fst . sortBy (\x y -> compare (snd x) (snd y)) . M.assocs
+  mkAlphabet = reverse . map fst . sortBy (compare `on` snd) . M.assocs
 
   startMap :: CMap
   startMap = M.empty
@@ -45,7 +46,7 @@ alphabets = map getAlphabet . transpose
 
 type Password = String
 crack :: Alphabets -> Password
-crack = map (fst . maximumBy (\x y -> compare (snd x) (snd y)) . helper)
+crack = map (fst . maximumBy (compare `on` snd) . helper)
   where
     helper :: Alphabet -> [(Char, Int)]
     helper a = do
@@ -75,7 +76,7 @@ load input =
 
 stack :: [a] -> [[a]]
 stack x
-  | length x >= 3 = (take 3 x ) : stack (drop 3 x)
+  | length x >= 3 = take 3 x : stack (drop 3 x)
   | otherwise = [x]
 
 {- All that is below shall run inside the IO Monad -}
@@ -95,6 +96,6 @@ main = do
   let cipher = concat stack
   let clearText = decipher cipher password
   let sum = asciiSum $ filter isAscii clearText
-  print $ "Password:\t" ++ password
-  print $ "Cleartext:\n" ++ clearText
-  print $ "Sum:\t" ++ (show sum)
+  putStrLn $ "Password:\t" ++ password
+  putStrLn $ "Cleartext:\n" ++ clearText
+  putStrLn $ "Sum:\t" ++ show sum

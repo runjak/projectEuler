@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Arrow ((&&&))
 import Control.Monad (guard)
 import Data.List (sort, group)
 
@@ -23,6 +24,6 @@ perimeters :: [Int]
 perimeters = map perimeter validPts
 
 solution :: Int
-solution = snd . last . sort . map (\x -> (length x, head x)) . group $ sort perimeters
+solution = snd . maximum . map (length &&& head) . group $ sort perimeters
 
 main = print solution

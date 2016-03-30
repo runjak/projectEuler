@@ -4,7 +4,7 @@ wordList :: IO [String]
 wordList = do
   input <- readFile "words.txt"
   let str = '[':input++"]"
-  return $ (read str :: [String])
+  return (read str :: [String])
 
 charScore :: Char -> Int
 charScore = subtract 64 . fromEnum
@@ -28,5 +28,4 @@ main :: IO ()
 main = do
   wl <- wordList
   let foo = triangleWords wl
-  putStrLn $ show foo
-  return ()
+  print foo

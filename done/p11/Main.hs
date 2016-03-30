@@ -18,7 +18,7 @@ field :: IO (Array Point Integer)
 field = liftM (toArray . cells) file
 
 multiValue :: Array Point Integer -> [Point] -> Integer
-multiValue a = product . map ((!)a)
+multiValue a = product . map (a !)
 
 pointToRow :: Point -> [Point]
 pointToRow (x,y) = take 4 [(x,z)|z<-[y..]]
@@ -42,4 +42,4 @@ main :: IO ()
 main = do
   f <- field
   let m = maximum $ map (multiValue f) groups
-  putStrLn $ show m
+  print m

@@ -1,5 +1,6 @@
 module Helper where
 
+import Data.Function (on)
 import qualified Data.Map as M
 import qualified Data.List as L
 
@@ -19,7 +20,7 @@ scanText :: String -> CMap
 scanText = foldl addChar startMap
 
 examine :: CMap -> [(Char, Int)]
-examine = L.sortBy (\x y -> compare (snd x) (snd y)) . M.assocs
+examine = L.sortBy (compare `on` snd) . M.assocs
 
 helper :: String -> [(Char, Int)]
 helper = examine . scanText

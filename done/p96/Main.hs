@@ -1,6 +1,7 @@
 module Main where
 
 import Data.List (nub,delete,(\\),minimumBy)
+import Data.Maybe (fromMaybe)
 import Data.Char (isDigit)
 import qualified Data.Map as M
 import Control.Monad (guard)
@@ -29,7 +30,7 @@ setConclusion :: Bool -> SudokuTile -> SudokuTile
 setConclusion b t = t{concluded=b}
 
 disableField :: SudokuTile -> Int -> SudokuTile
-disableField tile x = tile{possibleNumbers=(delete x $ possibleNumbers tile)}
+disableField tile x = tile{possibleNumbers = delete x $ possibleNumbers tile}
 
 maybefy :: (a -> a) -> Maybe a -> Maybe a
 maybefy f Nothing = Nothing
@@ -39,7 +40,7 @@ alter :: STF -> Field -> Element -> Field
 alter f = foldl $ alter1 f
 
 alter1 :: STF -> Field -> Point -> Field
-alter1 f field = flip (M.alter (maybefy f)) field
+alter1 f = flip (M.alter (maybefy f))
 
 points :: Element
 points = [(x,y)|x<-[0..8],y<-[0..8]]
@@ -93,7 +94,7 @@ conclude' :: Field -> Point -> Field
 conclude' field = maybe field (conclude field) . flip M.lookup field
 
 concludeAble :: SudokuTile -> Bool
-concludeAble x = (not $ concluded x) && ((==1) . length $ possibleNumbers x)
+concludeAble x = not (concluded x) && ((==1) . length $ possibleNumbers x)
 
 {- --- --- --- Exclusion --- --- --- -}
 exclusion :: Field -> Field
@@ -110,11 +111,11 @@ exclude field e =
   where
     exclude' :: Field -> (SudokuTile,[SudokuTile]) -> Field
     exclude' field (t,ts)
-      | (length $ possibleNumbers t) <= 1 = field
+      | length (possibleNumbers t) <= 1 = field
       | otherwise = check field (point t) . foldl1 (\\) $ possibleNumbers t : map possibleNumbers ts
 
     check :: Field -> Point -> [Int] -> Field
-    check field p [n] = flip conclude' p $ alter1 (flip setField n) field p
+    check field p [n] = flip conclude' p $ alter1 (`setField` n) field p
     check field _ _ = field
 
 {- --- --- --- Backtracking --- --- --- -}
@@ -131,7 +132,7 @@ backtrack field = do
   let filterList = filter ((>= 2) . length . possibleNumbers) $ M.elems field
   guard (filterList /= [])
   let subject = minimumBy compareTile filterList
-  f<-[(flip setField x)|x<-possibleNumbers subject]
+  f <- [flip setField x | x <- possibleNumbers subject]
   return $ alter1 f field (point subject)
   where
     compareTile :: SudokuTile -> SudokuTile -> Ordering -- | wtf ^^
@@ -141,7 +142,7 @@ backtrack field = do
 solve :: Field -> Field
 solve = solveList [exhausive conclusion, exhausive exclusion, backtracking]
   where
-    solveList :: [(Field->Field)] -> Field -> Field
+    solveList :: [Field -> Field] -> Field -> Field
     solveList [] field = field
     solveList (f:fs) field
       | solved field = field
@@ -201,7 +202,7 @@ showField = unlines . mkChunks 9 . concatMap (show . nums . possibleNumbers) . M
     nums x = 0
 
 fieldKey :: Field -> Integer
-fieldKey = maybe 0 id . helper
+fieldKey = fromMaybe 0 . helper
   where
     helper :: Field -> Maybe Integer
     helper field = do

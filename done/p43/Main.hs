@@ -18,7 +18,7 @@ triplets = map mkTriplets $ permutations digits
 
 fromTriplets :: [(Int,Int,Int)] -> [Int]
 fromTriplets ((a,b,c):xs)
-  | xs == []  = a:b:[c]
+  | null xs   = a:b:[c]
   | otherwise = a:fromTriplets xs
 
 toNumber :: [Int] -> Int

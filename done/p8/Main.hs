@@ -33,7 +33,7 @@ tokens = tokenize inputString
   tokenize _ = []
 
 filteredTokens :: [String]
-filteredTokens = sort . map sort $ filter (\x-> not('0' `elem` x)) tokens
+filteredTokens = sort . map sort $ filter (notElem '0') tokens
 
 problem8 :: Integer
 problem8 = product . map (\x->read[x] ::Integer) $ last filteredTokens

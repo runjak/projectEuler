@@ -3,8 +3,7 @@ module Main where
 -- Used to create the counters needed by sumMultiples.
 -- A counter has a max-value which is given, and starts at 0
 counterCreation :: [Integer] -> [(Integer,Integer)]
-counterCreation [] = []
-counterCreation (x:xs) = (0,x) : counterCreation xs
+counterCreation = map (\ x -> (0, x))
 
 -- Used to increase the counting-value of a Counter, which is the first Value.
 counterInc :: [(Integer,Integer)] -> [(Integer,Integer)]
@@ -15,9 +14,9 @@ counterInc ((a,b):xs) = (a+1,b) : counterInc xs
 -- If any Counter was resettet, the returned Bool will be true.
 counterCheck :: [(Integer,Integer)] -> (Bool,[(Integer,Integer)])
 counterCheck [] = (False,[])
-counterCheck ((a,b):[]) = ((a >= b),(if a >= b then [(0,b)] else [(a,b)]))
-counterCheck ((a,b):xs) = (or [fst (counterCheck xs),(a >= b)],
-  (if a >= b then (0,b) else (a,b)):(snd (counterCheck xs)))
+counterCheck [(a,b)] = (a >= b, if a >= b then [(0,b)] else [(a,b)])
+counterCheck ((a,b):xs) = (fst (counterCheck xs) || a >= b,
+  (if a >= b then (0,b) else (a,b)):snd (counterCheck xs))
 
 -- Builds up a new List of Items with only those contained
 -- where fst (counterCheck [(Integer,Integer)]) is True.
@@ -26,7 +25,7 @@ counterCheck ((a,b):xs) = (or [fst (counterCheck xs),(a >= b)],
 filterMultiples :: [Integer] -> [(Integer,Integer)] -> [Integer]
 filterMultiples [][] = []
 filterMultiples []_ = []
-filterMultiples (x:xs) c = (if fst (counterCheck c) then [x] else []) ++ filterMultiples xs (counterInc (snd (counterCheck c)))
+filterMultiples (x:xs) c = [x | fst (counterCheck c)] ++ filterMultiples xs (counterInc (snd (counterCheck c)))
 
 -- Let's get it solved ,)
 problem1 :: Integer

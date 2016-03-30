@@ -12,6 +12,6 @@ vals = [map (x*) [2..6] | x <- [1..]]
 
 results = flip zip [1..] $ map allSame vals
 
-solution = snd . head $ filter (fst) results
+solution = snd . head $ filter fst results
 
 main = print solution

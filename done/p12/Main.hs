@@ -17,9 +17,9 @@ someDivisors num = do
   return x
 
 getDivisorCount :: Integer -> Int
-getDivisorCount num = 2 * (length $ someDivisors num) + 2
+getDivisorCount num = 2 * length (someDivisors num) + 2
 
 solve :: Integer
 solve = head $ filter (\x -> getDivisorCount x >= 500) triangles
 
-main = putStrLn $ show solve
+main = print solve

@@ -18,7 +18,7 @@ root = round . sqrt . fromIntegral
 isPrime :: N -> Bool
 isPrime x
   | x <= 1 = False
-  | otherwise = all (/=0) . map (mod x) $ takeWhile (<=(root x)) primes
+  | otherwise = notElem 0 . map (mod x) $ takeWhile (<= root x) primes
 
 range :: [N]
 range = [-1000,-999..1000]
@@ -28,7 +28,7 @@ type B = N
 newtype QForm = QForm (A,B)
 
 instance Show QForm where
-  show (QForm (a, b)) = "n²+"++(show a)++"n+"++(show b)
+  show (QForm (a, b)) = "n²+"++ show a ++"n+"++ show b
 
 calc :: QForm -> Int -> Int
 calc (QForm (a,b)) n = n^2 + a*n + b

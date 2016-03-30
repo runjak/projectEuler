@@ -11,7 +11,7 @@ sieve (p:xs) = p:sieve [ x|x<-xs, x `mod` p /= 0 ]
 findSmallFactor :: Integer -> [Integer] -> Integer
 findSmallFactor x [] = 0
 findSmallFactor 0 (x:xs) = 0
-findSmallFactor x (y:ys) = if (mod x y) == 0
+findSmallFactor x (y:ys) = if mod x y == 0
   then y
   else findSmallFactor x ys
 
@@ -19,7 +19,7 @@ findSmallFactor x (y:ys) = if (mod x y) == 0
 getBigFactor :: Integer -> Integer -> Integer
 getBigFactor 0 x = 0
 getBigFactor x 0 = 0
-getBigFactor x y = toInteger (floor (fromRational (toRational(x) / toRational(y))))
+getBigFactor x y = toInteger (floor (fromRational (toRational x  / toRational y )))
 
 magicNumber :: Integer
 magicNumber = 600851475143
@@ -27,9 +27,8 @@ magicNumber = 600851475143
 primeFactors :: Integer -> [Integer]
 primeFactors 0 = []
 primeFactors 1 = []
-primeFactors x = (if (findSmallFactor x primes) /= 1
-  then [(findSmallFactor x primes)]
-  else []) ++ primeFactors (getBigFactor x (findSmallFactor x primes))
+primeFactors x = [findSmallFactor x primes | findSmallFactor x primes /= 1]
+              ++ primeFactors (getBigFactor x (findSmallFactor x primes))
 
 findBiggest :: [Integer] -> Integer
 findBiggest [] = 0

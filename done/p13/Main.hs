@@ -7,4 +7,4 @@ solution :: String
 solution = take 10 . show $ sum numbers
 
 main :: IO ()
-main = putStrLn $ "solution:\t" ++ (solution)
+main = putStrLn $ "solution:\t" ++ solution

@@ -10,12 +10,12 @@ fibonacci n = fibonacci (n-1) + fibonacci (n-2)
 evenFibonacci :: Integer -> Integer
 evenFibonacci 0 = 2
 evenFibonacci 1 = 8
-evenFibonacci n = (evenFibonacci (n-1)) * 4 + evenFibonacci (n-2)
+evenFibonacci n = evenFibonacci (n-1) * 4 + evenFibonacci (n-2)
 
 -- little helpy filter :P
 evenList :: Integer -> [Integer]
-evenList x = if (evenFibonacci x) <= 4000000
-  then (evenFibonacci x : (evenList (x+1)))
+evenList x = if evenFibonacci x <= 4000000
+  then evenFibonacci x : evenList (x+1)
   else []
 
 problem2 :: Integer

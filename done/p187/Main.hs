@@ -22,7 +22,7 @@ root = round . sqrt . fromIntegral
 isPrime :: N -> Bool
 isPrime x
   | x <= 1 = False
-  | otherwise = all (/=0) . map (mod x) $ takeWhile (<=(root x)) primes
+  | otherwise = notElem 0 . map (mod x) $ takeWhile (<= root x) primes
 
 startSet :: Set N
 startSet = Set.fromAscList $ takeWhile (<= (magic `div` 2)) primes
@@ -34,7 +34,7 @@ project p = let upperBound = fst . Set.split ((magic `div` p) + 1)
 
 solution :: N
 solution = sum $ do
-  p1 <- Set.toAscList $ startSet
+  p1 <- Set.toAscList startSet
   return $ Set.size $ project p1 startSet
 
 main :: IO ()

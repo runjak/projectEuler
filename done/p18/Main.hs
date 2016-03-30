@@ -19,6 +19,6 @@ mergeLines _ _ = []
 solution :: IO [Integer]
 solution = do
   t <- liftM triangle file
-  return $ foldl mergeLines (head t) (tail t)
+  return $ foldl1 mergeLines t
 
 main = print =<< solution

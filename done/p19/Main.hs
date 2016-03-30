@@ -8,14 +8,9 @@ years :: [Year]
 years = [1901..2000]
 
 isLeap :: Year -> Bool
-isLeap year = do
-  if year `mod` 4 == 0
-    then if year `mod` 100 == 0
-      then if year `mod` 400 == 0
-        then True
-        else False
-      else True
-    else False
+isLeap year =
+  (year `mod` 4 == 0) &&
+    (((year `mod` 100) /= 0) || (year `mod` 400 == 0))
 
 data Month = January | February | March | April | May | June | July | August | September | October | November | December
   deriving(Eq, Enum, Show)

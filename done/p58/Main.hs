@@ -22,7 +22,7 @@ root = round . sqrt . fromIntegral
 isPrime :: N -> Bool
 isPrime x
   | x <= 1 = False
-  | otherwise = all (/=0) . map (mod x) $ takeWhile (<=(root x)) primes
+  | otherwise = notElem 0 . map (mod x) $ takeWhile (<= root x) primes
 
 -- | 1,9,25,…
 squares :: [N]

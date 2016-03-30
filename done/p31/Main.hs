@@ -9,7 +9,7 @@ coins :: [N]
 coins = [200,100,50,20,10,5,2,1]
 
 compositions :: N -> [[N]]
-compositions n = compositions' coins n
+compositions = compositions' coins
 
 compositions' :: [N] -> N -> [[N]]
 compositions' _ 0 = return []

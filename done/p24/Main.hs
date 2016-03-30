@@ -43,7 +43,7 @@ apply :: [a] -> [Maybe Int] -> [a]
 apply [] _ = []
 apply l [] = l
 apply (a:as) (Nothing:ls) = a : apply as ls
-apply a' ((Just i):ls) =
+apply a' (Just i:ls) =
   let (a, as) = fetch i a'
   in a : apply as ls
 
