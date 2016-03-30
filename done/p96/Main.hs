@@ -213,8 +213,8 @@ fieldKey = maybe 0 id . helper
       let d3 = show . head $ possibleNumbers f3
       return $ read (d1++d2++d3)
 
-solution :: IO ()
-solution = do
+main :: IO ()
+main = do
   input <- file
   let fields = loadFields input
   let keys = map (fieldKey . solve) fields

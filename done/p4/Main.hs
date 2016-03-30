@@ -46,3 +46,5 @@ wantedP (p:ps) = if (hasValidFactors p(getFactors p [100..999]))
 
 problem4 :: Integer
 problem4 = wantedP palindromeList
+
+main = print problem4

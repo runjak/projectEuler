@@ -42,4 +42,4 @@ combinations n =
 -}
 searchSpace = filter (>= 10) $ Set.toList $ combinations 6
 
-main = print . sum $ filter predicate searchspace
+main = print . sum $ filter predicate searchSpace

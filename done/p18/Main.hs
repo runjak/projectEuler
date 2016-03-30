@@ -21,4 +21,4 @@ solution = do
   t <- liftM triangle file
   return $ foldl mergeLines (head t) (tail t)
 
-main = print solution
+main = print =<< solution

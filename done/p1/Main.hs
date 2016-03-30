@@ -29,7 +29,7 @@ filterMultiples []_ = []
 filterMultiples (x:xs) c = (if fst (counterCheck c) then [x] else []) ++ filterMultiples xs (counterInc (snd (counterCheck c)))
 
 -- Let's get it solved ,)
-problem1 :: () -> Integer
-problem1 () = sum (filterMultiples [0..999] (counterCreation [3,5]))
+problem1 :: Integer
+problem1 = sum (filterMultiples [0..999] (counterCreation [3,5]))
 
 main = print problem1
