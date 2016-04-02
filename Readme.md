@@ -1,7 +1,7 @@
 
 I use this repo to track my work on Project Euler.
 
-![Project Euler profile](https://projecteuler.net/profile/theMesh.png)
+[![Project Euler profile](https://projecteuler.net/profile/theMesh.png)](https://projecteuler.net/progress=theMesh)
 
 Problems will be put in directorys named 'p'x where x is the problem number.
 
