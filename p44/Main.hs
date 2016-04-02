@@ -40,4 +40,15 @@ diffs = do
 -- This approach is too slow at printing anything useful.
 -- I shall rethink this and figure out something more elegant.
 
+{-|
+  Since we need the sum of two pentagonal numbers to be a pentagonal number as well,
+  we can do the following:
+    p(z) = p(x)+p(y)
+         = (3z^2-z)/2 = (3x^2-x)/2 + (3y^2-y)/2
+  ≡ 0 = (3x^2-x)/2 + (3y^2-y)/2 - (3z^2-z)/2
+  ≡ 0 = 3x^2 + 3y^2 - 3z^2 - x - y + z
+  Where we have x,y,z ∈ ℕ and z > x ≧ y
+  Knowing this it should be possible to reduce the searchspace at least a bit.
+|-}
+
 main = print diffs
