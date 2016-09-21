@@ -59,6 +59,7 @@ import qualified Problem59 as Problem59
 import qualified Problem79 as Problem79
 import qualified Problem96 as Problem96
 import qualified Problem187 as Problem187
+import qualified Problem215 as Problem215
 
 problems :: [(String, IO ())]
 problems = [("Problem1: ", Problem1.main),
@@ -118,6 +119,7 @@ problems = [("Problem1: ", Problem1.main),
             ("Problem59: ", Problem59.main),
             ("Problem79: ", Problem79.main),
             ("Problem96: ", Problem96.main),
-            ("Problem187: ", Problem187.main)]
+            ("Problem187: ", Problem187.main),
+            ("Problem215: ", Problem215.main)]
 
 main = forM_ problems $ \(desc, p) -> putStr desc >> p
