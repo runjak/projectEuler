@@ -17,6 +17,13 @@ module Problem92 where
 import Control.Arrow
 import Data.Char (digitToInt)
 import Data.List (sort, partition)
+import qualified Data.List as List
+
+import Data.HashMap.Strict (HashMap)
+import Data.HashSet (HashSet)
+import qualified Data.HashMap.Strict as HashMap
+import qualified Data.HashSet as HashSet
+import qualified Data.Maybe as Maybe
 
 {- The given chain function -}
 next :: Int -> Int
@@ -32,9 +39,29 @@ step = next . norm
 range :: [Int]
 range = [1..10000000]
 
-good :: Int -> Bool
-good 89 = True
-good _ = False
+group :: [Int] -> [(Int, Int)]
+group = fmap go . List.group . sort . fmap norm
+  where
+    go :: [Int] -> (Int, Int)
+    go xs = (head xs, length xs)
 
-run :: [Int] -> (Int, [Int])
-run = first length . partition good . filter (/= 1) . fmap step
+initialPairs :: [(Int, Int)]
+initialPairs = group range
+
+-- | A pair is a number and a count.
+pairsToMap :: [(Int, Int)] -> HashMap Int Int
+pairsToMap = foldl go HashMap.empty
+  where
+    go :: HashMap Int Int -> (Int, Int) -> HashMap Int Int
+    go xToCountMap ( 1, count) = xToCountMap
+    go xToCountMap (89, count) = HashMap.insertWith (+) 89 count xToCountMap
+    go xToCountMap ( x, count) = HashMap.insertWith (+) (next x) (count + 1) xToCountMap
+
+solve xs =
+  let xToCountMap = pairsToMap xs
+      lengthIsOne = null . tail $ HashMap.toList xToCountMap
+  in if lengthIsOne
+    then snd . head $ HashMap.toList xToCountMap
+    else solve $ HashMap.toList xToCountMap
+
+main = print $ solve initialPairs
