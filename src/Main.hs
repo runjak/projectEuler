@@ -57,6 +57,7 @@ import qualified Problem57 as Problem57
 import qualified Problem58 as Problem58
 import qualified Problem59 as Problem59
 import qualified Problem79 as Problem79
+import qualified Problem89 as Problem89
 import qualified Problem92 as Problem92
 import qualified Problem96 as Problem96
 import qualified Problem187 as Problem187
@@ -118,6 +119,7 @@ problems = [("Problem1: ", Problem1.main),
             ("Problem58: ", Problem58.main),
             ("Problem59: ", Problem59.main),
             ("Problem79: ", Problem79.main),
+            ("Problem89: ", Problem89.main),
             ("Problem92: ", Problem92.main),
             ("Problem96: ", Problem96.main),
             ("Problem187: ", Problem187.main)]
