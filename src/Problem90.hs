@@ -1,4 +1,4 @@
-module Problem90 where
+module Problem90(main)where
 {--
   Task description:
   Each of the six faces on a cube has a different digit (0 to 9) written on it;
@@ -47,3 +47,5 @@ type N = Int
 -}
 squares :: [(N,N)]
 squares = [(0,1),(0,4),(0,9),(1,6),(2,5),(3,6),(4,9),(6,4),(8,1)]
+
+main = putStrLn "Not implemented"
