@@ -34,8 +34,7 @@ module Problem90(main)where
   How many distinct arrangements of the two cubes allow for all of the square numbers to be displayed?
 --}
 
-import Data.Char (digitToInt)
-import Data.List
+import qualified Data.List as List
 
 type N = Int
 
@@ -47,5 +46,28 @@ type N = Int
 -}
 squares :: [(N,N)]
 squares = [(0,1),(0,4),(0,9),(1,6),(2,5),(3,6),(4,9),(6,4),(8,1)]
+
+simplifyDigit :: N -> N
+simplifyDigit 9 = 6
+simplifyDigit x = x
+
+baseSets :: [([N],[N])]
+baseSets = filter possibleDice . List.nub $
+           sanitize <$> foldl go [([],[])] squares
+  where
+    go :: [([N],[N])] -> (N,N) -> [([N],[N])]
+    go setStash (d1,d2) = do
+      let d1' = simplifyDigit d1
+          d2' = simplifyDigit d2
+      (s1,s2) <- setStash
+      [(d1':s1,d2':s2),(d2':s1,d1':s2)]
+
+    sanitize :: ([N],[N]) -> ([N],[N])
+    sanitize (xs, ys) = let f = List.nub . List.sort
+                        in (f xs, f ys)
+
+    possibleDice :: ([N],[N]) -> Bool
+    possibleDice (xs, ys) = let f zs = length zs <= 6
+                            in f xs && f ys && xs < ys
 
 main = putStrLn "Not implemented"
