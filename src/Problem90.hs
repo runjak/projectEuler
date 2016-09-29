@@ -34,6 +34,7 @@ module Problem90(main)where
   How many distinct arrangements of the two cubes allow for all of the square numbers to be displayed?
 --}
 
+import Data.Function (on)
 import qualified Data.List as List
 
 type N = Int
@@ -70,4 +71,17 @@ baseSets = filter possibleDice . List.nub $
     possibleDice (xs, ys) = let f zs = length zs <= 6
                             in f xs && f ys && xs < ys
 
-main = putStrLn "Not implemented"
+setWeight :: [N] -> N
+setWeight xs = let len = length xs
+                   doubleIfSix = if 6 `elem` xs then 2 else 1
+                   emptyFields = 6 - len
+               in if len == 6
+                  then doubleIfSix
+                  else 10^emptyFields * doubleIfSix
+
+pairWeight :: ([N],[N]) -> N
+pairWeight = uncurry ((*) `on` setWeight)
+
+solution = sum $ fmap pairWeight baseSets
+
+main = print solution
