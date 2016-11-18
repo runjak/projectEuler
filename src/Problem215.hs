@@ -14,10 +14,14 @@ module Problem215 where
 import Control.Monad
 import Data.Function (on)
 import Data.Graph (Graph, Vertex)
+import Data.Matrix (Matrix)
 import Data.Maybe (fromJust)
+import qualified GHC.Arr as Arr
 import qualified Data.Graph as Graph
+import qualified Data.HashSet as HashSet
 import qualified Data.List as List
 import qualified Data.Map as Map
+import qualified Data.Matrix as Matrix
 
 {-
 A row may only ever depend on the preceding row.
@@ -85,7 +89,21 @@ graphForWidth w = let lines = buildLines w
                       edges = [(toVertex a, toVertex b)|(a,b) <- lEdges]
                   in Graph.buildG bounds edges
 
+graphToAdjMatrix :: Graph -> Matrix Int
+graphToAdjMatrix g =
+  let (minBound, maxBound) = Arr.bounds g
+  in Matrix.fromLists $ do
+    (v, edges) <- Arr.assocs g
+    let edgeSet = HashSet.fromList edges
+        adjForVertex v = if v `HashSet.member` edgeSet then 1 else 0
+    return [adjForVertex v|v <- [minBound..maxBound]]
+
+adjMatrixForWidth :: Width -> Matrix Int
+adjMatrixForWidth = graphToAdjMatrix . graphForWidth
+
 {- How to find the possible walks in the Graph? -}
+-- Something is wrong with countWalls - I should debug it on paper for the 9 3 case.
 countWalls :: Width -> Height -> Int
-countWalls w h = let g = graphForWidth
-                 in undefined
+countWalls w h = let g = graphForWidth w
+                     m = graphToAdjMatrix g
+                 in sum . Matrix.toList $ m^h
