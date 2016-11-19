@@ -101,9 +101,16 @@ graphToAdjMatrix g =
 adjMatrixForWidth :: Width -> Matrix Int
 adjMatrixForWidth = graphToAdjMatrix . graphForWidth
 
-{- How to find the possible walks in the Graph? -}
--- Something is wrong with countWalls - I should debug it on paper for the 9 3 case.
 countWalls :: Width -> Height -> Int
-countWalls w h = let g = graphForWidth w
-                     m = graphToAdjMatrix g
-                 in sum . Matrix.toList $ m^h
+countWalls w h
+  | h < 1 = 0
+  | h == 1 = length $ buildLines w
+  | otherwise = let g = graphForWidth w
+                    m = graphToAdjMatrix g
+                in sum . Matrix.toList $ m^(h - 1)
+
+example = countWalls 9 3
+
+solution = countWalls 32 10
+
+main = print solution
