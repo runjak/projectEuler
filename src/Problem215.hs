@@ -14,14 +14,14 @@ module Problem215 where
 import Control.Monad
 import Data.Function (on)
 import Data.Graph (Graph, Vertex)
-import Data.Matrix (Matrix)
 import Data.Maybe (fromJust)
+import Numeric.LinearAlgebra (Matrix, (<>))
 import qualified GHC.Arr as Arr
 import qualified Data.Graph as Graph
 import qualified Data.HashSet as HashSet
 import qualified Data.List as List
 import qualified Data.Map as Map
-import qualified Data.Matrix as Matrix
+import qualified Numeric.LinearAlgebra as LA
 
 {-
 A row may only ever depend on the preceding row.
@@ -89,25 +89,29 @@ graphForWidth w = let lines = buildLines w
                       edges = [(toVertex a, toVertex b)|(a,b) <- lEdges]
                   in Graph.buildG bounds edges
 
-graphToAdjMatrix :: Graph -> Matrix Int
-graphToAdjMatrix g =
-  let (minBound, maxBound) = Arr.bounds g
-  in Matrix.fromLists $ do
-    (v, edges) <- Arr.assocs g
-    let edgeSet = HashSet.fromList edges
-        adjForVertex v = if v `HashSet.member` edgeSet then 1 else 0
-    return [adjForVertex v|v <- [minBound..maxBound]]
+graphToDenseMatrix :: Graph -> Matrix Double
+graphToDenseMatrix = LA.toDense . graphToAssocMatrix
+  where
+    graphToAssocMatrix :: Graph -> LA.AssocMatrix
+    graphToAssocMatrix g = do
+      (v, targets) <- Arr.assocs g
+      [((v, t), 1)| t <- targets]
 
-adjMatrixForWidth :: Width -> Matrix Int
-adjMatrixForWidth = graphToAdjMatrix . graphForWidth
+mPow :: Matrix Double -> Int -> Matrix Double
+mPow m 0 = LA.ident $ LA.rows m
+mPow m 1 = m
+mPow m n
+  | even n = mPow (m <> m) (n `div` 2)
+  | otherwise = m <> mPow m (n - 1)
 
 countWalls :: Width -> Height -> Int
 countWalls w h
   | h < 1 = 0
   | h == 1 = length $ buildLines w
   | otherwise = let g = graphForWidth w
-                    m = graphToAdjMatrix g
-                in sum . Matrix.toList $ m^(h - 1)
+                    m = graphToDenseMatrix g
+                    m' = mPow m (h - 1)
+                in round . sum . concat $ LA.toLists m'
 
 example = countWalls 9 3
 
