@@ -21,6 +21,7 @@ import qualified Data.Graph as Graph
 import qualified Data.HashSet as HashSet
 import qualified Data.List as List
 import qualified Data.Map as Map
+import qualified Data.Tree as Tree
 import qualified Numeric.LinearAlgebra as LA
 
 {-
@@ -97,6 +98,20 @@ graphToDenseMatrix = LA.toDense . graphToAssocMatrix
       (v, targets) <- Arr.assocs g
       [((v, t), 1)| t <- targets]
 
+dissect :: Graph -> [Graph]
+dissect g = do
+  tree <- Graph.components g
+  let vertices = Tree.flatten tree
+      (renumber, bounds) = mkRenumber vertices
+  return . Graph.buildG bounds $ do
+    v <- vertices
+    w <-  Arr.unsafeAt g v
+    return (renumber v, renumber w)
+  where
+    mkRenumber ls = let mapping = Map.fromList $ zip ls [0..]
+                        λ = fromJust . (`Map.lookup` mapping)
+                    in (λ, (0, Map.size mapping))
+
 mPow :: Matrix Double -> Int -> Matrix Double
 mPow m 0 = LA.ident $ LA.rows m
 mPow m 1 = m
@@ -108,13 +123,16 @@ countWalls :: Width -> Height -> Int
 countWalls w h
   | h < 1 = 0
   | h == 1 = length $ buildLines w
+-- Using dissect reduced computation time from ~140s to ~9s.
   | otherwise = let g = graphForWidth w
-                    m = graphToDenseMatrix g
-                    m' = mPow m (h - 1)
-                in round . sum . concat $ LA.toLists m'
+                    ms = graphToDenseMatrix <$> dissect g
+                    ms' = fmap (mPow `flip` (h - 1)) ms
+                    calcSum = sum . concat . LA.toLists
+                in round . sum $ fmap calcSum ms'
 
 example = countWalls 9 3
 
+-- 806844323190414
 solution = countWalls 32 10
 
 main = print solution
