@@ -15,22 +15,96 @@ module Problem148 where
   Find the number of entries which are not divisible by 7 in the first one billion (10^(9)) rows of Pascal's triangle.
 --}
 
-import Data.Maybe as M
+import Data.Monoid ((<>))
+import Data.Ratio ((%))
+import qualified Data.Ratio as Ratio
 
-magic :: Integer
+
+type N = Integer
+
+magic :: N
 magic = 10^9
-magicT = TS 1 magic
-divisor :: Integer
+
+divisor :: N
 divisor = 7
+
+pows :: [N]
 pows = tail $ iterate (*divisor) 1
 
-data TriangleStump = TS {
-      low :: Integer
-    , up :: Integer
-  } deriving (Show)
+isPow :: N -> Bool
+isPow n = or $ (== n) <$> takeWhile (<= n) pows
 
-gSum :: Integer -> Integer
+gSum :: N -> N
 gSum x = (x^2 + x) `div` 2
 
-size :: TriangleStump -> Integer
-size ts = (gSum $ up ts) - (gSum . subtract 1 $ low ts)
+triangle :: [[N]]
+triangle = iterate nextRow [1]
+  where
+    nextRow :: [N] -> [N]
+    nextRow xs = 1 : (zipWith (+) xs $ tail xs) <> [1]
+
+modTriangle :: [[N]]
+modTriangle = fmap (fmap (`mod` divisor)) triangle
+
+strTriangle :: [String]
+strTriangle = fmap (fmap go) modTriangle
+  where
+    go 0 = '#'
+    go _ = ' '
+
+lineSums :: [N]
+lineSums = fmap (fromIntegral . length . filter (=='#')) strTriangle
+
+slowCount :: N -> N
+slowCount n = let remove = sum $ take (fromIntegral n) lineSums
+                  total = gSum n
+              in total - remove
+
+powCount :: N -> N
+powCount n
+  | n <= divisor = gSum n
+  | isPow n = 28 * powCount (n `div` divisor)
+  | otherwise = -1 -- Error case
+
+test :: [Bool]  -- testing same results for slowCount and powCount
+test = let sCounts = fmap slowCount pows
+           pCounts = fmap powCount pows
+       in zipWith (==) sCounts pCounts
+
+tLineSums :: N -> [N]
+tLineSums till = let ps = takeWhile (<= till) pows
+                     pLSums = fmap calcPowLineSums ps
+                 in take (fromIntegral till) $ merge pLSums
+                 where
+                   merge :: [[N]] -> [N]
+                   merge (xs:ys:zss) = let zs = zipWith (+) xs ys
+                                       in  merge (zs:zss)
+                   merge [xs] = xs
+                   merge [] = []
+
+calcPowLineSums :: N -> [N]
+calcPowLineSums p = let p' = p - 1
+                        pre = replicate (fromIntegral p) 0
+                        run = take (fromIntegral p) $ iterate (subtract 1) p'
+                        runs = [fmap (*x) run | x <- [1..(divisor - 1)]]
+                    in pre <> (go 1 (concat runs))
+                    where
+                      go :: N -> [N] -> [N]
+                      go 1 xs = xs <> go 2 xs
+                      go y xs = fmap (*y) xs <> go (y + 1) xs
+
+-- solutionFor :: N -> N
+solutionFor n = let upperPow = head $ dropWhile (< n) pows
+                    upperCount = powCount upperPow
+                    upperFields = gSum upperPow
+                    magicFields = gSum n
+                    wantedRatio = upperCount % upperFields
+                in wantedRatio * (fromIntegral magicFields)
+                -- in round $ fieldRatio * (fromIntegral upperCount)
+
+{-
+solution :: N
+solution = solutionFor magic
+
+main = print solution
+-}
