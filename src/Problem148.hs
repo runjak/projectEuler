@@ -17,6 +17,7 @@ module Problem148 where
 
 import Data.Monoid ((<>))
 import Data.Ratio ((%))
+import qualified Data.List as List
 import qualified Data.Ratio as Ratio
 
 
@@ -93,6 +94,15 @@ calcPowLineSums p = let p' = p - 1
                       go 1 xs = xs <> go 2 xs
                       go y xs = fmap (*y) xs <> go (y + 1) xs
 
+diagonalLengthFor :: N -> [N]
+diagonalLengthFor n = [n, n-1..1]
+
+fish = List.transpose $ take 20 triangle
+
+fSums = fmap go fish
+  where
+    go xs = zipWith subtract xs $ tail xs
+
 -- solutionFor :: N -> N
 solutionFor n = let upperPow = head $ dropWhile (< n) pows
                     upperCount = powCount upperPow
@@ -108,3 +118,21 @@ solution = solutionFor magic
 
 main = print solution
 -}
+
+fac :: N -> N
+fac 0 = 1
+fac 1 = 1
+fac n = product [1..n]
+
+binomialCoefficient :: N -> N -> N
+binomialCoefficient n k = fac n `div` (fac k * fac (n - k))
+
+nRange :: [N]
+nRange = [2 .. magic - 1]
+
+kRangeForN :: N -> [N]
+kRangeForN n = [1 .. n - 1]
+
+parts = do
+  n <- nRange
+  return . fmap (binomialCoefficient n) $ kRangeForN n
