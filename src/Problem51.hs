@@ -22,16 +22,18 @@ import Data.Char (digitToInt)
 import Data.Function (on)
 import Data.Monoid ((<>))
 import Data.Set (Set)
+import Data.Tree (Tree, Forest)
 import Numeric.LinearAlgebra (Z, Vector)
 import qualified Data.List as List
 import qualified Data.Set as Set
 import qualified Numeric.LinearAlgebra as LA
+import qualified Data.Tree as Tree
 
 type N = Int
 type Position = N
 type Digit = N
 
-familySize = 7 :: N
+familySize = 8 :: N
 
 primes :: [N]
 primes = 2 : 3 : sieve [] (tail primes) 3
@@ -42,11 +44,6 @@ primes = 2 : 3 : sieve [] (tail primes) 3
 
 groupBySameLength :: [N] -> [[N]]
 groupBySameLength = List.groupBy ((==) `on` (length . show))
-
-satisfiesLength :: N -> [a] -> Bool
-satisfiesLength 0 _ = True
-satisfiesLength n (x:xs) = satisfiesLength (n - 1) xs
-satisfiesLength n [] = False
 
 xs :: [N]
 xs = [13, 23, 43, 53, 73, 83]
@@ -71,21 +68,36 @@ We proceed as follows:
      in digits that are low enough to still allow for the other options.
 |-}
 
+toVector :: N -> Vector Z
+toVector = LA.fromList . fmap (fromIntegral . digitToInt) . show
+
+fromVector :: Vector Z -> N
+fromVector = read . (=<<) show . LA.toList
+
 groupToVectors :: [N] -> [Vector Z]
-groupToVectors = fmap (LA.fromList . fmap (fromIntegral . digitToInt) . show)
+groupToVectors = fmap toVector
+
+vectorsToGroup :: [Vector Z] -> [N]
+vectorsToGroup = fmap fromVector
 
 partitionVectors :: Vector Z -> [Vector Z] -> ([Vector Z], [Vector Z])
 partitionVectors v = List.partition (linkedWith v)
-  where
-    linkedWith :: Vector Z -> Vector Z -> Bool
-    linkedWith v w = let x = w - v
-                     in check . filter (> 0) $ LA.toList x
 
-    check :: [Z] -> Bool
-    check (x:xs)
-      | x > 0 = all (==x) xs
+{- It is a pitty that `linkedWith` is only symmetric, but not transitive. -}
+linkedWith :: Vector Z -> Vector Z -> Bool
+linkedWith v w =
+  let x = (max v w) - (min v w)
+  in go 0 $ LA.toList x
+  where
+    go 0 (x:xs)
+      | x < 0 = False
+      | x > 0 = go x xs
+      | otherwise = go 0 xs
+    go x (y:ys)
+      | y == 0 = go x ys
+      | x == y = go x ys
       | otherwise = False
-    check [] = True
+    go _ [] =  True
 
 vectorPartitions :: [Vector Z] -> [[Vector Z]]
 vectorPartitions [] = []
@@ -93,12 +105,35 @@ vectorPartitions (v:vs) =
   let (v1, v2) = partitionVectors v vs
   in (v:v1):vectorPartitions v2
 
-vectorsToGroup :: [Vector Z] -> [N]
-vectorsToGroup = fmap (read . (=<<) show . LA.toList)
-
 groupPartitions :: [N] -> [[N]]
 groupPartitions = fmap vectorsToGroup . vectorPartitions . groupToVectors
 
 test = do
   pGroup <- groupBySameLength primes
   groupPartitions pGroup
+
+t = test !! 1
+
+toTree' :: [N] -> Tree N
+toTree' = fmap fromVector . toTree . fmap toVector
+
+toTree :: [Vector Z] -> Tree (Vector Z)
+toTree (p:ps) = foldl insertInTree (Tree.Node p []) ps
+  where
+    insertInTree :: Tree (Vector Z) -> Vector Z -> Tree (Vector Z)
+    insertInTree t p = t{Tree.subForest = insertInForest (Tree.subForest t) p}
+
+    insertInForest :: Forest (Vector Z) -> Vector Z -> Forest (Vector Z)
+    insertInForest [] p = [Tree.Node p []]
+    insertInForest (t:ts) p
+      | linkedWith (Tree.rootLabel t) p = (insertInTree t p):ts
+      | otherwise = t:insertInForest ts p
+
+test' = toTree' <$> groupBySameLength primes
+
+test'' = fmap (Tree.drawTree . fmap show) test'
+
+satisfiesLength :: N -> [a] -> Bool
+satisfiesLength 0 _ = True
+satisfiesLength n (x:xs) = satisfiesLength (n - 1) xs
+satisfiesLength n [] = False
