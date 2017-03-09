@@ -16,18 +16,23 @@ module Problem51 where
   by replacing part of the number (not necessarily adjacent digits) with the same digit,
   is part of an eight prime value family.
 --}
-import Control.Arrow (second)
+import Control.Arrow (second, (***))
 import Control.Monad
 import Data.Char (digitToInt)
 import Data.Function (on)
+import Data.Graph (Graph, Vertex)
 import Data.Monoid ((<>))
+import Numeric.LinearAlgebra (Matrix)
 import Data.Set (Set)
 import Data.Tree (Tree, Forest)
 import Numeric.LinearAlgebra (Z, Vector)
+import qualified GHC.Arr as Arr
+import qualified Data.Graph as Graph
 import qualified Data.List as List
+import qualified Data.Map as Map
 import qualified Data.Set as Set
-import qualified Numeric.LinearAlgebra as LA
 import qualified Data.Tree as Tree
+import qualified Numeric.LinearAlgebra as LA
 
 type N = Int
 type Position = N
@@ -74,19 +79,11 @@ toVector = LA.fromList . fmap (fromIntegral . digitToInt) . show
 fromVector :: Vector Z -> N
 fromVector = read . (=<<) show . LA.toList
 
-groupToVectors :: [N] -> [Vector Z]
-groupToVectors = fmap toVector
-
-vectorsToGroup :: [Vector Z] -> [N]
-vectorsToGroup = fmap fromVector
-
-partitionVectors :: Vector Z -> [Vector Z] -> ([Vector Z], [Vector Z])
-partitionVectors v = List.partition (linkedWith v)
-
-{- It is a pitty that `linkedWith` is only symmetric, but not transitive. -}
+{- It is a pitty that `linkedWith'` is only symmetric, but not transitive. -}
+linkedWith' v w = linkedWith (min v w) (max v w)
 linkedWith :: Vector Z -> Vector Z -> Bool
 linkedWith v w =
-  let x = (max v w) - (min v w)
+  let x = w - v
   in go 0 $ LA.toList x
   where
     go 0 (x:xs)
@@ -99,41 +96,33 @@ linkedWith v w =
       | otherwise = False
     go _ [] =  True
 
-vectorPartitions :: [Vector Z] -> [[Vector Z]]
-vectorPartitions [] = []
-vectorPartitions (v:vs) =
-  let (v1, v2) = partitionVectors v vs
-  in (v:v1):vectorPartitions v2
-
-groupPartitions :: [N] -> [[N]]
-groupPartitions = fmap vectorsToGroup . vectorPartitions . groupToVectors
-
-test = do
-  pGroup <- groupBySameLength primes
-  groupPartitions pGroup
-
-t = test !! 1
-
-toTree' :: [N] -> Tree N
-toTree' = fmap fromVector . toTree . fmap toVector
-
-toTree :: [Vector Z] -> Tree (Vector Z)
-toTree (p:ps) = foldl insertInTree (Tree.Node p []) ps
+linkGraph :: [N] -> (Graph, Vertex -> (N, Vector Z, [Vector Z]), Vector Z -> Maybe Vertex)
+linkGraph = Graph.graphFromEdges . filter (\(_,_,xs) -> not $ null xs) . computeLinks'
   where
-    insertInTree :: Tree (Vector Z) -> Vector Z -> Tree (Vector Z)
-    insertInTree t p = t{Tree.subForest = insertInForest (Tree.subForest t) p}
+    computeLinks :: [Vector Z] -> [(Vector Z, [Vector Z])]
+    computeLinks [] = []
+    computeLinks vs = do
+      v <- vs
+      return (v, [x | x <- vs, v /= x, linkedWith' v x] )
 
-    insertInForest :: Forest (Vector Z) -> Vector Z -> Forest (Vector Z)
-    insertInForest [] p = [Tree.Node p []]
-    insertInForest (t:ts) p
-      | linkedWith (Tree.rootLabel t) p = (insertInTree t p):ts
-      | otherwise = t:insertInForest ts p
+    computeLinks' :: [N] -> [(N, Vector Z, [Vector Z])]
+    computeLinks' xs = zipWith (\n (v, vs) -> (n, v, vs)) xs . computeLinks $ fmap toVector xs
 
-test' = toTree' <$> groupBySameLength primes
+graphToMatrix :: Graph -> Matrix Double
+graphToMatrix = LA.toDense . graphToAssocMatrix
+  where
+    graphToAssocMatrix :: Graph -> LA.AssocMatrix
+    graphToAssocMatrix g = do
+      (v, targets) <- Arr.assocs g
+      [((v, t), 1)| t <- targets]
 
-test'' = fmap (Tree.drawTree . fmap show) test'
+mPow :: Matrix Double -> Int -> Matrix Double
+mPow m 0 = LA.ident $ LA.rows m
+mPow m 1 = m
+mPow m n
+  | even n = mPow (m <> m) (n `div` 2)
+  | otherwise = m <> mPow m (n - 1)
 
-satisfiesLength :: N -> [a] -> Bool
-satisfiesLength 0 _ = True
-satisfiesLength n (x:xs) = satisfiesLength (n - 1) xs
-satisfiesLength n [] = False
+test = groupBySameLength primes
+test' = fmap linkGraph test
+test'' = fmap (\(g,_,_) -> graphToMatrix g) test'
