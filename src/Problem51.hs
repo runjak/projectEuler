@@ -16,16 +16,14 @@ module Problem51 where
   by replacing part of the number (not necessarily adjacent digits) with the same digit,
   is part of an eight prime value family.
 --}
-import Control.Arrow (second, (***))
 import Control.Monad
 import Data.Char (digitToInt)
 import Data.Function (on)
 import Data.Graph (Graph, Vertex)
 import Data.Monoid ((<>))
-import Numeric.LinearAlgebra (Matrix)
+import Numeric.LinearAlgebra (Matrix, Z, Vector)
 import Data.Set (Set)
 import Data.Tree (Tree, Forest)
-import Numeric.LinearAlgebra (Z, Vector)
 import qualified GHC.Arr as Arr
 import qualified Data.Graph as Graph
 import qualified Data.List as List
@@ -79,12 +77,12 @@ toVector = LA.fromList . fmap (fromIntegral . digitToInt) . show
 fromVector :: Vector Z -> N
 fromVector = read . (=<<) show . LA.toList
 
-{- It is a pitty that `linkedWith'` is only symmetric, but not transitive. -}
-linkedWith' v w = linkedWith (min v w) (max v w)
 linkedWith :: Vector Z -> Vector Z -> Bool
 linkedWith v w =
   let x = w - v
-  in go 0 $ LA.toList x
+      xDigits = LA.toList x
+      has0 = elem 0
+  in has0 xDigits && go 0 xDigits
   where
     go 0 (x:xs)
       | x < 0 = False
@@ -95,34 +93,26 @@ linkedWith v w =
       | x == y = go x ys
       | otherwise = False
     go _ [] =  True
+{- It is a pitty that `linkedWith` is only symmetric, but not transitive. -}
+linkedWith' :: Vector Z -> Vector Z -> Bool
+linkedWith' v w = linkedWith (min v w) (max v w)
+{- Testing linkedWith' on N -}
+linkedWith'' :: N -> N -> Bool
+linkedWith'' = linkedWith' `on` toVector
+
+testLinkedWith = let goodPairs = [(x, y) | x<-xs, y <- xs] <> [(x, y) | x<-ys, y <- ys]
+                     badPairs = [(13, 79), (23, 67), (23, 89), (31, 97), (37, 59), (53, 97), (61, 83), (67, 89)]
+                     wanted = uncurry linkedWith''
+                 in and $ fmap wanted goodPairs <> fmap (not . wanted) badPairs
 
 linkGraph :: [N] -> (Graph, Vertex -> (N, Vector Z, [Vector Z]), Vector Z -> Maybe Vertex)
 linkGraph = Graph.graphFromEdges . filter (\(_,_,xs) -> not $ null xs) . computeLinks'
   where
     computeLinks :: [Vector Z] -> [(Vector Z, [Vector Z])]
-    computeLinks [] = []
-    computeLinks vs = do
-      v <- vs
-      return (v, [x | x <- vs, v /= x, linkedWith' v x] )
+    computeLinks (v:vs) =
+      let vLinks = (v, [x | x <- vs, v /= x, linkedWith' v x])
+      in vLinks : computeLinks vs
+    computeLinks _ = []
 
     computeLinks' :: [N] -> [(N, Vector Z, [Vector Z])]
     computeLinks' xs = zipWith (\n (v, vs) -> (n, v, vs)) xs . computeLinks $ fmap toVector xs
-
-graphToMatrix :: Graph -> Matrix Double
-graphToMatrix = LA.toDense . graphToAssocMatrix
-  where
-    graphToAssocMatrix :: Graph -> LA.AssocMatrix
-    graphToAssocMatrix g = do
-      (v, targets) <- Arr.assocs g
-      [((v, t), 1)| t <- targets]
-
-mPow :: Matrix Double -> Int -> Matrix Double
-mPow m 0 = LA.ident $ LA.rows m
-mPow m 1 = m
-mPow m n
-  | even n = mPow (m <> m) (n `div` 2)
-  | otherwise = m <> mPow m (n - 1)
-
-test = groupBySameLength primes
-test' = fmap linkGraph test
-test'' = fmap (\(g,_,_) -> graphToMatrix g) test'
