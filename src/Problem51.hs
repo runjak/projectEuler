@@ -100,10 +100,13 @@ linkedWith' v w = linkedWith (min v w) (max v w)
 linkedWith'' :: N -> N -> Bool
 linkedWith'' = linkedWith' `on` toVector
 
-testLinkedWith = let goodPairs = [(x, y) | x<-xs, y <- xs] <> [(x, y) | x<-ys, y <- ys]
-                     badPairs = [(13, 79), (23, 67), (23, 89), (31, 97), (37, 59), (53, 97), (61, 83), (67, 89)]
-                     wanted = uncurry linkedWith''
-                 in and $ fmap wanted goodPairs <> fmap (not . wanted) badPairs
+testLinkedWith =
+  let goodPairs = [(x, y) | x<-xs, y <- xs] <> [(x, y) | x<-ys, y <- ys]
+      badNumbers = [10177, 21277, 32377, 54577, 65677, 76777, 87877]
+      badPairs' = [(13, 79), (23, 67), (23, 89), (31, 97), (37, 59), (53, 97), (61, 83), (67, 89)]
+      badPairs = badPairs' <> [(x, y) | x <- badNumbers, y <- badNumbers, x /= y]
+      wanted = uncurry linkedWith''
+  in and $ fmap wanted goodPairs <> fmap (not . wanted) badPairs
 
 linkGraph :: [N] -> (Graph, Vertex -> (N, Vector Z, [Vector Z]), Vector Z -> Maybe Vertex)
 linkGraph = Graph.graphFromEdges . filter (\(_,_,xs) -> not $ null xs) . computeLinks'
@@ -116,3 +119,58 @@ linkGraph = Graph.graphFromEdges . filter (\(_,_,xs) -> not $ null xs) . compute
 
     computeLinks' :: [N] -> [(N, Vector Z, [Vector Z])]
     computeLinks' xs = zipWith (\n (v, vs) -> (n, v, vs)) xs . computeLinks $ fmap toVector xs
+
+linkedGraphs :: [(Graph, Vertex -> N)]
+linkedGraphs = let lookup f v = (\(n, _, _) -> n) $ f v
+                   wrap (g, lookup', _) = (g, lookup lookup')
+               in wrap . linkGraph <$> groupBySameLength primes
+
+drawForest :: (a -> String) -> Forest a -> IO ()
+drawForest toString = putStrLn . Tree.drawForest . fmap (fmap toString)
+
+drawTree :: (a -> String) -> Tree a -> IO ()
+drawTree toString = putStrLn . Tree.drawTree . fmap toString
+
+-- It appears that finding the desired numbers maps neatly onto the clique problem.
+findCliques :: Graph -> [Set Vertex]
+findCliques g = do
+  v <- Graph.vertices g
+  findCliquesFor g $ Set.singleton v
+
+findCliquesFor :: Graph -> Set Vertex -> [Set Vertex]
+findCliquesFor g vSet =
+  let next = Set.toList $ findNextFor g vSet
+      continue = findCliquesFor g
+  in result continue vSet next
+  where
+    result :: (Set Vertex -> [Set Vertex]) -> Set Vertex -> [Vertex] -> [Set Vertex]
+    result _ s [] = [s]
+    result continue s xs = concatMap (continue . flip Set.insert s) xs
+
+findNextFor :: Graph -> Set Vertex -> Set Vertex
+findNextFor g vSet =
+  let canReach = (Set.fromList . (Arr.!) g) <$> Set.toList vSet
+      wanted = Set.difference `flip` vSet
+  in reduce $ fmap wanted canReach
+  where
+    reduce :: [Set Vertex] -> Set Vertex
+    reduce [] = Set.empty
+    reduce rs = foldl1 Set.intersection rs
+
+cliquesForGraph :: (Graph, Vertex -> N) -> [Set N]
+cliquesForGraph (g, lookup) =
+  let cliques = findCliques g
+      setNub = Set.toList . Set.fromList
+  in setNub $ fmap (Set.map lookup) cliques
+
+cliques :: [[Set N]]
+cliques = fmap (simplify . List.sort . cliquesForGraph) linkedGraphs
+  where
+    simplify :: [Set N] -> [Set N]
+    simplify (a:b:cs)
+      | Set.isSubsetOf b a = simplify (a : cs)
+      | otherwise = a : simplify (b : cs)
+    simplify x = x
+
+wantedBySize :: N -> [Set N]
+wantedBySize size = filter ((>= size) . Set.size) $ concat cliques
