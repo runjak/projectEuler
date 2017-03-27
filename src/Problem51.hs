@@ -132,21 +132,6 @@ drawTree :: (a -> String) -> Tree a -> IO ()
 drawTree toString = putStrLn . Tree.drawTree . fmap toString
 
 -- It appears that finding the desired numbers maps neatly onto the clique problem.
-findCliques :: Graph -> [Set Vertex]
-findCliques g = do
-  v <- Graph.vertices g
-  findCliquesFor g $ Set.singleton v
-
-findCliquesFor :: Graph -> Set Vertex -> [Set Vertex]
-findCliquesFor g vSet =
-  let next = Set.toList $ findNextFor g vSet
-      continue = findCliquesFor g
-  in result continue vSet next
-  where
-    result :: (Set Vertex -> [Set Vertex]) -> Set Vertex -> [Vertex] -> [Set Vertex]
-    result _ s [] = [s]
-    result continue s xs = concatMap (continue . flip Set.insert s) xs
-
 findNextFor :: Graph -> Set Vertex -> Set Vertex
 findNextFor g vSet =
   let canReach = (Set.fromList . (Arr.!) g) <$> Set.toList vSet
@@ -157,14 +142,34 @@ findNextFor g vSet =
     reduce [] = Set.empty
     reduce rs = foldl1 Set.intersection rs
 
-cliquesForGraph :: (Graph, Vertex -> N) -> [Set N]
-cliquesForGraph (g, lookup) =
-  let cliques = findCliques g
-      setNub = Set.toList . Set.fromList
-  in setNub $ fmap (Set.map lookup) cliques
+{-
+https://www.andres-loeh.de/IFIP-MCE.pdf
+https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+-}
+bronKerbosch :: (Set Vertex -> Set Vertex) -> Set Vertex -> Set Vertex -> Set Vertex -> [Set Vertex]
+bronKerbosch findNext compsub cand excl
+  | Set.null cand && Set.null excl = [compsub]
+  | otherwise = concat $ List.unfoldr go (Set.toList cand, cand, excl)
+    where
+      go :: ([Vertex], Set Vertex, Set Vertex) -> Maybe ([Set Vertex], ([Vertex], Set Vertex, Set Vertex))
+      go ([], _, _) = Nothing
+      go (v : vs, cand, excl) =
+        let vSet = Set.singleton v
+            nextSet = findNext vSet
+            compsub' = Set.union compsub vSet
+            cand' = Set.intersection cand nextSet
+            excl' = Set.intersection excl nextSet
+            nextState = (vs, Set.difference cand vSet, Set.union excl vSet)
+        in Just (bronKerbosch findNext compsub' cand' excl', nextState)
+-- Let's use bronKerbosch on the Graphs we have!
+bronKerbosch' :: (Graph, Vertex -> N) -> [Set N]
+bronKerbosch' (g, lookup) =
+  let findNext = findNextFor g
+      cand = Set.fromList $ Graph.vertices g
+  in Set.map lookup <$> bronKerbosch findNext Set.empty cand Set.empty
 
 cliques :: [[Set N]]
-cliques = fmap (simplify . List.sort . cliquesForGraph) linkedGraphs
+cliques = fmap (simplify . List.sort . bronKerbosch') linkedGraphs
   where
     simplify :: [Set N] -> [Set N]
     simplify (a:b:cs)
