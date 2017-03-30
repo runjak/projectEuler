@@ -78,21 +78,17 @@ fromVector :: Vector Z -> N
 fromVector = read . (=<<) show . LA.toList
 
 linkedWith :: Vector Z -> Vector Z -> Bool
-linkedWith v w =
-  let x = w - v
-      xDigits = LA.toList x
-      has0 = elem 0
-  in has0 xDigits && go 0 xDigits
+linkedWith = go Nothing `on` LA.toList
   where
-    go 0 (x:xs)
-      | x < 0 = False
-      | x > 0 = go x xs
-      | otherwise = go 0 xs
-    go x (y:ys)
-      | y == 0 = go x ys
-      | x == y = go x ys
+    go :: Maybe (Z, Z) -> [Z] -> [Z] -> Bool
+    go Nothing (v:vs) (w:ws)
+      | v == w = go Nothing vs ws
+      | otherwise = go (Just (v, w)) vs ws
+    go vw@(Just (v', w')) (v:vs) (w:ws)
+      | v == w = go vw vs ws
+      | v == v' && w == w' = go vw vs ws
       | otherwise = False
-    go _ [] =  True
+    go _ [] [] = True
 {- It is a pitty that `linkedWith` is only symmetric, but not transitive. -}
 linkedWith' :: Vector Z -> Vector Z -> Bool
 linkedWith' v w = linkedWith (min v w) (max v w)
