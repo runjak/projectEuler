@@ -20,6 +20,8 @@ import Control.Monad
 import Data.Char (digitToInt)
 import Data.Function (on)
 import Data.Graph (Graph, Vertex)
+import Data.HashMap.Strict (HashMap)
+import Data.HashSet (HashSet)
 import Data.Monoid ((<>))
 import Numeric.LinearAlgebra (Matrix, Z, Vector)
 import Data.Set (Set)
@@ -31,6 +33,8 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import qualified Data.Tree as Tree
 import qualified Numeric.LinearAlgebra as LA
+import qualified Data.HashSet as HashSet
+import qualified Data.HashMap.Strict as HashMap
 
 type N = Int
 type Position = N
@@ -96,6 +100,7 @@ linkedWith' v w = linkedWith (min v w) (max v w)
 linkedWith'' :: N -> N -> Bool
 linkedWith'' = linkedWith' `on` toVector
 
+testLinkedWith :: Bool
 testLinkedWith =
   let goodPairs = [(x, y) | x<-xs, y <- xs] <> [(x, y) | x<-ys, y <- ys]
       badNumbers = [10177, 21277, 32377, 54577, 65677, 76777, 87877]
@@ -103,6 +108,18 @@ testLinkedWith =
       badPairs = badPairs' <> [(x, y) | x <- badNumbers, y <- badNumbers, x /= y]
       wanted = uncurry linkedWith''
   in and $ fmap wanted goodPairs <> fmap (not . wanted) badPairs
+
+linkMap :: [N] -> HashMap N (HashSet N)
+linkMap = HashMap.fromList . computeLinks
+  where
+    computeLinks :: [N] -> [(N, HashSet N)]
+    computeLinks (n:ns) =
+      let nLinks = (n, HashSet.fromList [m | m <- ns, linkedWith'' n m])
+      in nLinks : computeLinks ns
+    computeLinks _ = []
+
+linkedMaps :: [HashMap N (HashSet N)]
+linkedMaps = linkMap <$> groupBySameLength primes
 
 linkGraph :: [N] -> (Graph, Vertex -> (N, Vector Z, [Vector Z]), Vector Z -> Maybe Vertex)
 linkGraph = Graph.graphFromEdges . filter (\(_,_,xs) -> not $ null xs) . computeLinks'
@@ -120,12 +137,6 @@ linkedGraphs :: [(Graph, Vertex -> N)]
 linkedGraphs = let lookup f v = (\(n, _, _) -> n) $ f v
                    wrap (g, lookup', _) = (g, lookup lookup')
                in wrap . linkGraph <$> groupBySameLength primes
-
-drawForest :: (a -> String) -> Forest a -> IO ()
-drawForest toString = putStrLn . Tree.drawForest . fmap (fmap toString)
-
-drawTree :: (a -> String) -> Tree a -> IO ()
-drawTree toString = putStrLn . Tree.drawTree . fmap toString
 
 {-
 https://www.andres-loeh.de/IFIP-MCE.pdf
