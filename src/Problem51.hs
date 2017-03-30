@@ -19,20 +19,10 @@ module Problem51 where
 import Control.Monad
 import Data.Char (digitToInt)
 import Data.Function (on)
-import Data.Graph (Graph, Vertex)
 import Data.HashMap.Strict (HashMap)
 import Data.HashSet (HashSet)
 import Data.Monoid ((<>))
-import Numeric.LinearAlgebra (Matrix, Z, Vector)
-import Data.Set (Set)
-import Data.Tree (Tree, Forest)
-import qualified GHC.Arr as Arr
-import qualified Data.Graph as Graph
 import qualified Data.List as List
-import qualified Data.Map as Map
-import qualified Data.Set as Set
-import qualified Data.Tree as Tree
-import qualified Numeric.LinearAlgebra as LA
 import qualified Data.HashSet as HashSet
 import qualified Data.HashMap.Strict as HashMap
 
@@ -75,16 +65,13 @@ We proceed as follows:
      in digits that are low enough to still allow for the other options.
 |-}
 
-toVector :: N -> Vector Z
-toVector = LA.fromList . fmap (fromIntegral . digitToInt) . show
+toVector :: N -> [N]
+toVector = fmap digitToInt . show
 
-fromVector :: Vector Z -> N
-fromVector = read . (=<<) show . LA.toList
-
-linkedWith :: Vector Z -> Vector Z -> Bool
-linkedWith = go Nothing `on` LA.toList
+linkedWith :: [N] -> [N] -> Bool
+linkedWith = go Nothing
   where
-    go :: Maybe (Z, Z) -> [Z] -> [Z] -> Bool
+    go :: Maybe (N, N) -> [N] -> [N] -> Bool
     go Nothing (v:vs) (w:ws)
       | v == w = go Nothing vs ws
       | otherwise = go (Just (v, w)) vs ws
@@ -94,11 +81,11 @@ linkedWith = go Nothing `on` LA.toList
       | otherwise = False
     go _ [] [] = True
 {- It is a pitty that `linkedWith` is only symmetric, but not transitive. -}
-linkedWith' :: Vector Z -> Vector Z -> Bool
-linkedWith' v w = linkedWith (min v w) (max v w)
-{- Testing linkedWith' on N -}
-linkedWith'' :: N -> N -> Bool
-linkedWith'' = linkedWith' `on` toVector
+linkedWith' :: N -> N -> Bool
+linkedWith' a b =
+  let v = toVector $ min a b
+      w = toVector $ max a b
+  in linkedWith v w
 
 testLinkedWith :: Bool
 testLinkedWith =
@@ -106,79 +93,76 @@ testLinkedWith =
       badNumbers = [10177, 21277, 32377, 54577, 65677, 76777, 87877]
       badPairs' = [(13, 79), (23, 67), (23, 89), (31, 97), (37, 59), (53, 97), (61, 83), (67, 89)]
       badPairs = badPairs' <> [(x, y) | x <- badNumbers, y <- badNumbers, x /= y]
-      wanted = uncurry linkedWith''
+      wanted = uncurry linkedWith'
   in and $ fmap wanted goodPairs <> fmap (not . wanted) badPairs
 
 linkMap :: [N] -> HashMap N (HashSet N)
 linkMap = HashMap.fromList . computeLinks
   where
     computeLinks :: [N] -> [(N, HashSet N)]
-    computeLinks (n:ns) =
-      let nLinks = (n, HashSet.fromList [m | m <- ns, linkedWith'' n m])
-      in nLinks : computeLinks ns
-    computeLinks _ = []
+    computeLinks ns = do
+      n <- ns
+      let linked = [m | m <- ns, m /= n, linkedWith' n m]
+      return (n, HashSet.fromList linked)
 
 linkedMaps :: [HashMap N (HashSet N)]
 linkedMaps = linkMap <$> groupBySameLength primes
 
-linkGraph :: [N] -> (Graph, Vertex -> (N, Vector Z, [Vector Z]), Vector Z -> Maybe Vertex)
-linkGraph = Graph.graphFromEdges . filter (\(_,_,xs) -> not $ null xs) . computeLinks'
-  where
-    computeLinks :: [Vector Z] -> [(Vector Z, [Vector Z])]
-    computeLinks (v:vs) =
-      let vLinks = (v, [x | x <- vs, v /= x, linkedWith' v x])
-      in vLinks : computeLinks vs
-    computeLinks _ = []
-
-    computeLinks' :: [N] -> [(N, Vector Z, [Vector Z])]
-    computeLinks' xs = zipWith (\n (v, vs) -> (n, v, vs)) xs . computeLinks $ fmap toVector xs
-
-linkedGraphs :: [(Graph, Vertex -> N)]
-linkedGraphs = let lookup f v = (\(n, _, _) -> n) $ f v
-                   wrap (g, lookup', _) = (g, lookup lookup')
-               in wrap . linkGraph <$> groupBySameLength primes
-
 {-
 https://www.andres-loeh.de/IFIP-MCE.pdf
 https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
+https://hackage.haskell.org/package/maximal-cliques-0.1.1/docs/src/Data-Algorithm-MaximalCliques.html#maximalCliques
 -}
-bronKerbosch :: (Vertex -> Set Vertex) -> Set Vertex -> Set Vertex -> Set Vertex -> [Set Vertex]
+bronKerbosch :: (N -> HashSet N) -> HashSet N -> HashSet N -> HashSet N -> [HashSet N]
 bronKerbosch findNext compsub cand excl
-  | Set.null cand && Set.null excl = [compsub]
-  | otherwise = concat $ List.unfoldr go (Set.toList cand, cand, excl)
+  | HashSet.null cand && HashSet.null excl = [compsub]
+  | otherwise = concat $ List.unfoldr go (HashSet.toList cand, cand, excl)
     where
-      go :: ([Vertex], Set Vertex, Set Vertex) -> Maybe ([Set Vertex], ([Vertex], Set Vertex, Set Vertex))
+      go :: ([N], HashSet N, HashSet N) -> Maybe ([HashSet N], ([N], HashSet N, HashSet N))
       go ([], _, _) = Nothing
       go (v : vs, cand, excl) =
-        let vSet = Set.singleton v
-            nextSet = findNext v
-            compsub' = Set.union compsub vSet
-            cand' = Set.intersection cand nextSet
-            excl' = Set.intersection excl nextSet
-            nextState = (vs, Set.difference cand vSet, Set.union excl vSet)
+        let nextSet = findNext v
+            compsub' = HashSet.insert v compsub
+            cand' = HashSet.intersection cand nextSet
+            excl' = HashSet.intersection excl nextSet
+            nextState = (vs, HashSet.delete v cand, HashSet.insert v excl)
         in Just (bronKerbosch findNext compsub' cand' excl', nextState)
 -- Let's use bronKerbosch on the Graphs we have!
-bronKerbosch' :: (Graph, Vertex -> N) -> [Set N]
-bronKerbosch' (g, lookup) =
-  let findNext = Set.fromList . (Arr.!) g
-      cand = Set.fromList $ Graph.vertices g
-  in Set.map lookup <$> bronKerbosch findNext Set.empty cand Set.empty
+bronKerbosch' :: HashMap N (HashSet N) -> [HashSet N]
+bronKerbosch' g =
+  let findNext = (HashMap.!) g
+      cand = HashSet.fromList $ HashMap.keys g
+  in bronKerbosch findNext HashSet.empty cand HashSet.empty
 
-cliques :: [[Set N]]
-cliques = fmap (simplify . List.sort . bronKerbosch') linkedGraphs
-  where
-    simplify :: [Set N] -> [Set N]
-    simplify (a:b:cs)
-      | Set.isSubsetOf b a = simplify (a : cs)
-      | otherwise = a : simplify (b : cs)
-    simplify x = x
+-- | The Bron-Kerbosch algorithm for finding all maximal cliques in an undirected graph.
+-- <http://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm>. Works on nodes represented as 'Int's.
+maximalCliques :: (HashSet N -> HashSet N -> N) -- ^ A function that given two 'IntSet's, chooses a member of one as a pivot.
+               -> (N -> HashSet N)  -- ^ A function that given a node id, yields the set of its neighbors.
+               -> HashSet N -- ^ The set of all nodes in the graph.
+               -> [HashSet N] -- ^ An enumeration of all maximal cliques in the graph.
+maximalCliques pickpivot neighborsOf nodeset = go HashSet.empty nodeset HashSet.empty
+    where go r p x
+              | HashSet.null p && HashSet.null x = [r]
+              | otherwise =
+                  let pivot = pickpivot p x
+                      step' (p',x') v =
+                          let nv  = neighborsOf v
+                          in ((HashSet.delete v p', HashSet.insert v x'), go (HashSet.insert v r) (HashSet.intersection nv p') (HashSet.intersection nv x'))
+                  in concat . snd . List.mapAccumL step' (p,x) $ HashSet.toList (p `HashSet.difference` neighborsOf pivot)
 
-wantedBySize :: N -> [Set N]
-wantedBySize size = filter ((>= size) . Set.size) $ concat cliques
+cliques :: [[HashSet N]]
+cliques = fmap bronKerbosch' linkedMaps
+
+wantedBySize :: N -> [HashSet N]
+wantedBySize size = filter ((>= size) . HashSet.size) $ concat cliques
 
 testWantedBySize :: Bool
 testWantedBySize =
-  let search = Set.toList . head . wantedBySize . length
-      xs' = search xs
-      ys' = search ys
-  in xs == xs' && ys == ys'
+  let search = head . wantedBySize . length
+      test wanted = (HashSet.fromList wanted) == (search wanted)
+  in all test [xs, ys]
+
+problem51 :: N
+problem51 = minimum . head $ wantedBySize familySize
+
+main = print problem51
