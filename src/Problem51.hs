@@ -175,3 +175,10 @@ cliques = fmap (simplify . List.sort . bronKerbosch') linkedGraphs
 
 wantedBySize :: N -> [Set N]
 wantedBySize size = filter ((>= size) . Set.size) $ concat cliques
+
+testWantedBySize :: Bool
+testWantedBySize =
+  let search = Set.toList . head . wantedBySize . length
+      xs' = search xs
+      ys' = search ys
+  in xs == xs' && ys == ys'
