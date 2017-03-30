@@ -127,22 +127,11 @@ drawForest toString = putStrLn . Tree.drawForest . fmap (fmap toString)
 drawTree :: (a -> String) -> Tree a -> IO ()
 drawTree toString = putStrLn . Tree.drawTree . fmap toString
 
--- It appears that finding the desired numbers maps neatly onto the clique problem.
-findNextFor :: Graph -> Set Vertex -> Set Vertex
-findNextFor g vSet =
-  let canReach = (Set.fromList . (Arr.!) g) <$> Set.toList vSet
-      wanted = Set.difference `flip` vSet
-  in reduce $ fmap wanted canReach
-  where
-    reduce :: [Set Vertex] -> Set Vertex
-    reduce [] = Set.empty
-    reduce rs = foldl1 Set.intersection rs
-
 {-
 https://www.andres-loeh.de/IFIP-MCE.pdf
 https://en.wikipedia.org/wiki/Bron%E2%80%93Kerbosch_algorithm
 -}
-bronKerbosch :: (Set Vertex -> Set Vertex) -> Set Vertex -> Set Vertex -> Set Vertex -> [Set Vertex]
+bronKerbosch :: (Vertex -> Set Vertex) -> Set Vertex -> Set Vertex -> Set Vertex -> [Set Vertex]
 bronKerbosch findNext compsub cand excl
   | Set.null cand && Set.null excl = [compsub]
   | otherwise = concat $ List.unfoldr go (Set.toList cand, cand, excl)
@@ -151,7 +140,7 @@ bronKerbosch findNext compsub cand excl
       go ([], _, _) = Nothing
       go (v : vs, cand, excl) =
         let vSet = Set.singleton v
-            nextSet = findNext vSet
+            nextSet = findNext v
             compsub' = Set.union compsub vSet
             cand' = Set.intersection cand nextSet
             excl' = Set.intersection excl nextSet
@@ -160,7 +149,7 @@ bronKerbosch findNext compsub cand excl
 -- Let's use bronKerbosch on the Graphs we have!
 bronKerbosch' :: (Graph, Vertex -> N) -> [Set N]
 bronKerbosch' (g, lookup) =
-  let findNext = findNextFor g
+  let findNext = Set.fromList . (Arr.!) g
       cand = Set.fromList $ Graph.vertices g
   in Set.map lookup <$> bronKerbosch findNext Set.empty cand Set.empty
 
