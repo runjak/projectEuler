@@ -3,13 +3,13 @@
 
 name:                projectEuler
 version:             0.1.0.0
-synopsis:            Jakobs personal progress on project euler
+synopsis:            Fionas personal progress on project euler
 -- description:
 homepage:            https://github.com/runjak/projectEuler
 license:             MIT
 license-file:        LICENSE
-author:              Jakob Runge
-maintainer:          sicarius@g4t3.de
+author:              Fiona Runge
+maintainer:          project-euler@runjak.codes
 -- copyright:
 category:            Education
 build-type:          Simple
